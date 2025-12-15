@@ -1,0 +1,133 @@
+{
+  "name": "nextjs-explorer",
+  "displayName": "NextJS Explorer",
+  "description": "Visual explorer for Next.js/React apps - see pages, components, and their relationships",
+  "version": "0.1.0",
+  "publisher": "amelmo",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "nextjs",
+    "react",
+    "components",
+    "explorer",
+    "visualization"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/package.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nextjs-explorer",
+          "title": "NextJS Explorer",
+          "icon": "resources/icons/explorer.svg"
+        }
+      ]
+    },
+    "views": {
+      "nextjs-explorer": [
+        {
+          "id": "nextjsExplorer",
+          "name": "Explorer",
+          "contextualTitle": "NextJS Explorer"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "nextjsExplorer.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "NextJS Explorer"
+      },
+      {
+        "command": "nextjsExplorer.openInBrowser",
+        "title": "Open in Browser",
+        "icon": "$(link-external)",
+        "category": "NextJS Explorer"
+      },
+      {
+        "command": "nextjsExplorer.goToFile",
+        "title": "Go to File",
+        "category": "NextJS Explorer"
+      },
+      {
+        "command": "nextjsExplorer.generateStory",
+        "title": "Generate Story",
+        "icon": "$(sparkle)",
+        "category": "NextJS Explorer"
+      },
+      {
+        "command": "nextjsExplorer.viewInWebUI",
+        "title": "View in Web UI",
+        "icon": "$(link-external)",
+        "category": "NextJS Explorer"
+      },
+      {
+        "command": "nextjsExplorer.startServer",
+        "title": "Start Server",
+        "category": "NextJS Explorer"
+      },
+      {
+        "command": "nextjsExplorer.stopServer",
+        "title": "Stop Server",
+        "category": "NextJS Explorer"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "nextjsExplorer.refresh",
+          "when": "view == nextjsExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "nextjsExplorer.openInBrowser",
+          "when": "view == nextjsExplorer",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "nextjsExplorer.generateStory",
+          "when": "view == nextjsExplorer && viewItem =~ /^(component|page)$/",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "nextjsExplorer.viewInWebUI",
+          "when": "view == nextjsExplorer && viewItem =~ /^(component|page)$/",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "nextjsExplorer.goToFile",
+          "when": "view == nextjsExplorer && viewItem =~ /^(component|page|hook|context|utility)$/",
+          "group": "2_navigation@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "open": "^10.1.0"
+  }
+}
