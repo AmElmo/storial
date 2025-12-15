@@ -41,8 +41,8 @@ export async function activate(context: vscode.ExtensionContext) {
   // Set API client for status bar
   statusBarManager.setApiClient(serverManager.getApiClient());
 
-  // Register all commands
-  registerCommands(context, treeProvider, serverManager, statusBarManager);
+  // Register all commands (pass treeView for double-click handling)
+  registerCommands(context, treeProvider, serverManager, statusBarManager, treeView);
 
   // Add disposables
   context.subscriptions.push(treeView);

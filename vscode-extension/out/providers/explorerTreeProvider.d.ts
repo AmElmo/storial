@@ -17,6 +17,13 @@ export declare class ExplorerTreeProvider implements vscode.TreeDataProvider<vsc
     getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]>;
     private getRootCategories;
     private getCategoryChildren;
+    private getComponentFilePath;
+    private getPageFilePath;
+    private getPageDetails;
+    private getComponentDetails;
+    private getHookDetails;
+    private getContextDetails;
+    private getUtilityDetails;
     private groupPagesByFolder;
     private groupComponentsByFolder;
 }

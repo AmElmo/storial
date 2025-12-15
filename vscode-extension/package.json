@@ -57,6 +57,7 @@
       {
         "command": "nextjsExplorer.goToFile",
         "title": "Go to File",
+        "icon": "$(go-to-file)",
         "category": "NextJS Explorer"
       },
       {
@@ -108,8 +109,13 @@
         },
         {
           "command": "nextjsExplorer.goToFile",
-          "when": "view == nextjsExplorer && viewItem =~ /^(component|page|hook|context|utility)$/",
+          "when": "view == nextjsExplorer && viewItem =~ /^(component|page|hook|context|utility|detailLink)$/",
           "group": "2_navigation@1"
+        },
+        {
+          "command": "nextjsExplorer.goToFile",
+          "when": "view == nextjsExplorer && viewItem =~ /^(component|page|hook|context|utility)$/",
+          "group": "inline"
         }
       ]
     }

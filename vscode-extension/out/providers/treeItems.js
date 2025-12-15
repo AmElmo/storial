@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessageTreeItem = exports.FolderTreeItem = exports.UtilityTreeItem = exports.ContextTreeItem = exports.HookTreeItem = exports.ComponentTreeItem = exports.PageTreeItem = exports.CategoryTreeItem = void 0;
+exports.PropItem = exports.DetailLinkItem = exports.DetailSectionItem = exports.MessageTreeItem = exports.FolderTreeItem = exports.UtilityTreeItem = exports.ContextTreeItem = exports.HookTreeItem = exports.ComponentTreeItem = exports.PageTreeItem = exports.CategoryTreeItem = void 0;
 const vscode = __importStar(require("vscode"));
 class CategoryTreeItem extends vscode.TreeItem {
     category;
@@ -53,6 +53,7 @@ class CategoryTreeItem extends vscode.TreeItem {
             case 'hooks': return 'symbol-method';
             case 'contexts': return 'symbol-interface';
             case 'utilities': return 'tools';
+            case 'health': return 'warning';
             default: return 'folder';
         }
     }
@@ -60,9 +61,15 @@ class CategoryTreeItem extends vscode.TreeItem {
 exports.CategoryTreeItem = CategoryTreeItem;
 class PageTreeItem extends vscode.TreeItem {
     page;
+    hasDetails;
+    filePath;
     constructor(page) {
-        super(page.route || '/', vscode.TreeItemCollapsibleState.None);
+        // Make expandable if has components or links
+        const hasDetails = page.components.length > 0 || page.linksTo.length > 0;
+        super(page.route || '/', hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         this.page = page;
+        this.hasDetails = hasDetails;
+        this.filePath = page.filePath;
         this.contextValue = 'page';
         // Tooltip with details
         const tooltip = new vscode.MarkdownString();
@@ -71,9 +78,13 @@ class PageTreeItem extends vscode.TreeItem {
         if (page.components.length > 0) {
             tooltip.appendMarkdown(`- Components: ${page.components.length}\n`);
         }
+        if (page.linksTo.length > 0) {
+            tooltip.appendMarkdown(`- Links to: ${page.linksTo.length} pages\n`);
+        }
         if (page.dataDependencies.length > 0) {
             tooltip.appendMarkdown(`- Data deps: ${page.dataDependencies.length}\n`);
         }
+        tooltip.appendMarkdown(`\n*Double-click or use inline button to open file*`);
         this.tooltip = tooltip;
         // Icon based on type
         if (page.isLayout) {
@@ -88,12 +99,7 @@ class PageTreeItem extends vscode.TreeItem {
         else {
             this.iconPath = new vscode.ThemeIcon('file');
         }
-        // Command to open file
-        this.command = {
-            command: 'nextjsExplorer.goToFile',
-            title: 'Go to File',
-            arguments: [page.filePath]
-        };
+        // No command - click expands, use inline button or double-click to open file
         // Show component count
         if (page.components.length > 0) {
             this.description = `${page.components.length} components`;
@@ -103,11 +109,16 @@ class PageTreeItem extends vscode.TreeItem {
 exports.PageTreeItem = PageTreeItem;
 class ComponentTreeItem extends vscode.TreeItem {
     component;
+    hasDetails;
+    filePath;
     constructor(component) {
-        super(component.name, vscode.TreeItemCollapsibleState.None);
-        this.component = component;
-        this.contextValue = 'component';
         const usageCount = component.usedInPages.length + component.usedInComponents.length;
+        const hasDetails = usageCount > 0 || component.props.length > 0;
+        super(component.name, hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+        this.component = component;
+        this.hasDetails = hasDetails;
+        this.filePath = component.filePath;
+        this.contextValue = 'component';
         // Tooltip
         const tooltip = new vscode.MarkdownString();
         tooltip.appendMarkdown(`**${component.name}**\n\n`);
@@ -117,15 +128,11 @@ class ComponentTreeItem extends vscode.TreeItem {
         if (component.props.length > 0) {
             tooltip.appendMarkdown(`- Props: ${component.props.map(p => p.name).join(', ')}\n`);
         }
+        tooltip.appendMarkdown(`\n*Double-click or use inline button to open file*`);
         this.tooltip = tooltip;
         // Icon
         this.iconPath = new vscode.ThemeIcon(component.isClientComponent ? 'browser' : 'server');
-        // Command
-        this.command = {
-            command: 'nextjsExplorer.goToFile',
-            title: 'Go to File',
-            arguments: [component.filePath]
-        };
+        // No command - click expands, use inline button or double-click to open file
         // Usage count as description
         if (usageCount > 0) {
             this.description = `${usageCount}×`;
@@ -138,9 +145,14 @@ class ComponentTreeItem extends vscode.TreeItem {
 exports.ComponentTreeItem = ComponentTreeItem;
 class HookTreeItem extends vscode.TreeItem {
     hook;
+    hasDetails;
+    filePath;
     constructor(hook) {
-        super(hook.name, vscode.TreeItemCollapsibleState.None);
+        const hasDetails = hook.usedIn.length > 0 || hook.dependencies.length > 0;
+        super(hook.name, hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         this.hook = hook;
+        this.hasDetails = hasDetails;
+        this.filePath = hook.filePath;
         this.contextValue = 'hook';
         this.iconPath = new vscode.ThemeIcon('symbol-method');
         const tooltip = new vscode.MarkdownString();
@@ -150,21 +162,23 @@ class HookTreeItem extends vscode.TreeItem {
             tooltip.appendMarkdown(`- Dependencies: ${hook.dependencies.join(', ')}\n`);
         }
         tooltip.appendMarkdown(`- Used in: ${hook.usedIn.length} places\n`);
+        tooltip.appendMarkdown(`\n*Double-click or use inline button to open file*`);
         this.tooltip = tooltip;
+        // No command - click expands, use inline button or double-click to open file
         this.description = hook.usedIn.length > 0 ? `${hook.usedIn.length}×` : 'unused';
-        this.command = {
-            command: 'nextjsExplorer.goToFile',
-            title: 'Go to File',
-            arguments: [hook.filePath]
-        };
     }
 }
 exports.HookTreeItem = HookTreeItem;
 class ContextTreeItem extends vscode.TreeItem {
     context;
+    hasDetails;
+    filePath;
     constructor(context) {
-        super(context.name, vscode.TreeItemCollapsibleState.None);
+        const hasDetails = context.usedIn.length > 0;
+        super(context.name, hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         this.context = context;
+        this.hasDetails = hasDetails;
+        this.filePath = context.filePath;
         this.contextValue = 'context';
         this.iconPath = new vscode.ThemeIcon('symbol-interface');
         const tooltip = new vscode.MarkdownString();
@@ -172,21 +186,23 @@ class ContextTreeItem extends vscode.TreeItem {
         tooltip.appendMarkdown(`- Provider: \`${context.providerName}\`\n`);
         tooltip.appendMarkdown(`- File: \`${context.fileName}\`\n`);
         tooltip.appendMarkdown(`- Used in: ${context.usedIn.length} places\n`);
+        tooltip.appendMarkdown(`\n*Double-click or use inline button to open file*`);
         this.tooltip = tooltip;
+        // No command - click expands, use inline button or double-click to open file
         this.description = context.usedIn.length > 0 ? `${context.usedIn.length}×` : 'unused';
-        this.command = {
-            command: 'nextjsExplorer.goToFile',
-            title: 'Go to File',
-            arguments: [context.filePath]
-        };
     }
 }
 exports.ContextTreeItem = ContextTreeItem;
 class UtilityTreeItem extends vscode.TreeItem {
     utility;
+    hasDetails;
+    filePath;
     constructor(utility) {
-        super(utility.name, vscode.TreeItemCollapsibleState.None);
+        const hasDetails = utility.usedIn.length > 0 || utility.exports.length > 0;
+        super(utility.name, hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         this.utility = utility;
+        this.hasDetails = hasDetails;
+        this.filePath = utility.filePath;
         this.contextValue = 'utility';
         this.iconPath = new vscode.ThemeIcon('tools');
         const tooltip = new vscode.MarkdownString();
@@ -194,13 +210,10 @@ class UtilityTreeItem extends vscode.TreeItem {
         tooltip.appendMarkdown(`- File: \`${utility.fileName}\`\n`);
         tooltip.appendMarkdown(`- Exports: ${utility.exports.join(', ')}\n`);
         tooltip.appendMarkdown(`- Used in: ${utility.usedIn.length} places\n`);
+        tooltip.appendMarkdown(`\n*Double-click or use inline button to open file*`);
         this.tooltip = tooltip;
+        // No command - click expands, use inline button or double-click to open file
         this.description = `${utility.exports.length} exports`;
-        this.command = {
-            command: 'nextjsExplorer.goToFile',
-            title: 'Go to File',
-            arguments: [utility.filePath]
-        };
     }
 }
 exports.UtilityTreeItem = UtilityTreeItem;
@@ -225,4 +238,44 @@ class MessageTreeItem extends vscode.TreeItem {
     }
 }
 exports.MessageTreeItem = MessageTreeItem;
+class DetailSectionItem extends vscode.TreeItem {
+    items;
+    icon;
+    constructor(label, items, icon) {
+        super(label, items.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
+        this.items = items;
+        this.icon = icon;
+        this.contextValue = 'detailSection';
+        this.iconPath = new vscode.ThemeIcon(icon);
+        this.description = `${items.length}`;
+    }
+}
+exports.DetailSectionItem = DetailSectionItem;
+class DetailLinkItem extends vscode.TreeItem {
+    constructor(label, filePath, icon) {
+        super(label, vscode.TreeItemCollapsibleState.None);
+        this.contextValue = 'detailLink';
+        if (icon) {
+            this.iconPath = new vscode.ThemeIcon(icon);
+        }
+        if (filePath) {
+            this.command = {
+                command: 'nextjsExplorer.goToFile',
+                title: 'Go to File',
+                arguments: [filePath]
+            };
+            this.tooltip = `Click to open ${filePath}`;
+        }
+    }
+}
+exports.DetailLinkItem = DetailLinkItem;
+class PropItem extends vscode.TreeItem {
+    constructor(name, type, required) {
+        super(name, vscode.TreeItemCollapsibleState.None);
+        this.contextValue = 'prop';
+        this.iconPath = new vscode.ThemeIcon(required ? 'symbol-property' : 'symbol-field');
+        this.description = type + (required ? '' : '?');
+    }
+}
+exports.PropItem = PropItem;
 //# sourceMappingURL=treeItems.js.map

@@ -69,9 +69,10 @@ class ServerManager {
             return this.startServer();
         }
         else if (choice === "I'll run it manually") {
-            const command = 'npm run dev';
+            const explorerPath = this.getExplorerPath();
+            const command = `cd ${explorerPath} && npm run dev`;
             await vscode.env.clipboard.writeText(command);
-            vscode.window.showInformationMessage(`Command copied to clipboard: ${command}\n\nRun this in the nextjs-explorer directory.`);
+            vscode.window.showInformationMessage(`Command copied to clipboard. Run it in your terminal to start both the server and web UI.`);
         }
         return false;
     }
@@ -80,10 +81,18 @@ class ServerManager {
         this.outputChannel.appendLine(`Starting server from: ${explorerPath}`);
         this.outputChannel.show(true);
         try {
-            this.serverProcess = (0, child_process_1.spawn)('npm', ['run', 'dev:server'], {
+            // Use full path to npm since VSCode extension host doesn't inherit shell PATH
+            const npmPath = '/opt/homebrew/bin/npm';
+            // Also need to set PATH so node can be found
+            const env = {
+                ...process.env,
+                PATH: `/opt/homebrew/bin:/usr/local/bin:${process.env.PATH || ''}`
+            };
+            // Use 'dev' instead of 'dev:server' to start both server (3050) and UI (5180)
+            this.serverProcess = (0, child_process_1.spawn)(npmPath, ['run', 'dev'], {
                 cwd: explorerPath,
-                shell: true,
-                env: { ...process.env }
+                shell: false,
+                env
             });
             this.serverProcess.stdout?.on('data', (data) => {
                 this.outputChannel.appendLine(data.toString().trim());

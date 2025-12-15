@@ -111,6 +111,30 @@ class ExplorerTreeProvider {
         if (element instanceof treeItems_1.FolderTreeItem) {
             return element.children;
         }
+        // Page details
+        if (element instanceof treeItems_1.PageTreeItem && element.hasDetails) {
+            return this.getPageDetails(element.page);
+        }
+        // Component details
+        if (element instanceof treeItems_1.ComponentTreeItem && element.hasDetails) {
+            return this.getComponentDetails(element.component);
+        }
+        // Hook details
+        if (element instanceof treeItems_1.HookTreeItem && element.hasDetails) {
+            return this.getHookDetails(element.hook);
+        }
+        // Context details
+        if (element instanceof treeItems_1.ContextTreeItem && element.hasDetails) {
+            return this.getContextDetails(element.context);
+        }
+        // Utility details
+        if (element instanceof treeItems_1.UtilityTreeItem && element.hasDetails) {
+            return this.getUtilityDetails(element.utility);
+        }
+        // Detail section children
+        if (element instanceof treeItems_1.DetailSectionItem) {
+            return element.items.map(item => new treeItems_1.DetailLinkItem(item.name, item.filePath, 'circle-small'));
+        }
         return [];
     }
     getRootCategories() {
@@ -148,6 +172,119 @@ class ExplorerTreeProvider {
             default:
                 return [];
         }
+    }
+    // Helper to look up component file path by name
+    getComponentFilePath(name) {
+        return this.scanResult?.components.find(c => c.name === name)?.filePath;
+    }
+    // Helper to look up page file path by route
+    getPageFilePath(route) {
+        return this.scanResult?.pages.find(p => p.route === route)?.filePath;
+    }
+    // Detail views for expanded items
+    getPageDetails(page) {
+        const items = [];
+        if (page.components.length > 0) {
+            const componentItems = page.components.map(name => ({
+                name,
+                filePath: this.getComponentFilePath(name)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Components used', componentItems, 'symbol-class'));
+        }
+        if (page.linksTo.length > 0) {
+            const linkItems = page.linksTo.map(route => ({
+                name: route,
+                filePath: this.getPageFilePath(route)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Links to', linkItems, 'link'));
+        }
+        if (page.dataDependencies.length > 0) {
+            const deps = page.dataDependencies.map(d => ({
+                name: `${d.type}: ${d.source}`,
+                filePath: undefined
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Data dependencies', deps, 'database'));
+        }
+        return items;
+    }
+    getComponentDetails(component) {
+        const items = [];
+        if (component.usedInPages.length > 0) {
+            const pageItems = component.usedInPages.map(route => ({
+                name: route,
+                filePath: this.getPageFilePath(route)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Used in pages', pageItems, 'file'));
+        }
+        if (component.usedInComponents.length > 0) {
+            const compItems = component.usedInComponents.map(name => ({
+                name,
+                filePath: this.getComponentFilePath(name)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Used in components', compItems, 'symbol-class'));
+        }
+        if (component.props.length > 0) {
+            const propItems = component.props.map(p => ({
+                name: `${p.name}: ${p.type}${p.required ? '' : '?'}`,
+                filePath: undefined
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Props', propItems, 'symbol-property'));
+        }
+        if (component.dataDependencies.length > 0) {
+            const deps = component.dataDependencies.map(d => ({
+                name: `${d.type}: ${d.source}`,
+                filePath: undefined
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Data dependencies', deps, 'database'));
+        }
+        return items;
+    }
+    getHookDetails(hook) {
+        const items = [];
+        if (hook.usedIn.length > 0) {
+            const usedInItems = hook.usedIn.map(name => ({
+                name,
+                filePath: this.getComponentFilePath(name)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Used in', usedInItems, 'references'));
+        }
+        if (hook.dependencies.length > 0) {
+            const depItems = hook.dependencies.map(name => ({
+                name,
+                filePath: undefined
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Dependencies', depItems, 'package'));
+        }
+        return items;
+    }
+    getContextDetails(context) {
+        const items = [];
+        if (context.usedIn.length > 0) {
+            const usedInItems = context.usedIn.map(name => ({
+                name,
+                filePath: this.getComponentFilePath(name)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Used in', usedInItems, 'references'));
+        }
+        return items;
+    }
+    getUtilityDetails(utility) {
+        const items = [];
+        if (utility.exports.length > 0) {
+            const exportItems = utility.exports.map(name => ({
+                name,
+                filePath: undefined
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Exports', exportItems, 'symbol-function'));
+        }
+        if (utility.usedIn.length > 0) {
+            const usedInItems = utility.usedIn.map(name => ({
+                name,
+                filePath: this.getComponentFilePath(name)
+            }));
+            items.push(new treeItems_1.DetailSectionItem('Used in', usedInItems, 'references'));
+        }
+        return items;
     }
     groupPagesByFolder(pages) {
         // Sort pages by route

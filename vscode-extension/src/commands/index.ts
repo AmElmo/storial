@@ -2,18 +2,86 @@ import * as vscode from 'vscode';
 import { ExplorerTreeProvider } from '../providers/explorerTreeProvider';
 import { ServerManager } from '../server/serverManager';
 import { StatusBarManager } from '../statusBar/statusBarManager';
-import { ComponentTreeItem, PageTreeItem } from '../providers/treeItems';
+import {
+  ComponentTreeItem,
+  PageTreeItem,
+  HookTreeItem,
+  ContextTreeItem,
+  UtilityTreeItem
+} from '../providers/treeItems';
+
+// Helper to extract file path from various tree item types
+function getFilePathFromItem(item: unknown): string | undefined {
+  if (typeof item === 'string') {
+    return item;
+  }
+  if (item instanceof PageTreeItem) {
+    return item.filePath;
+  }
+  if (item instanceof ComponentTreeItem) {
+    return item.filePath;
+  }
+  if (item instanceof HookTreeItem) {
+    return item.filePath;
+  }
+  if (item instanceof ContextTreeItem) {
+    return item.filePath;
+  }
+  if (item instanceof UtilityTreeItem) {
+    return item.filePath;
+  }
+  return undefined;
+}
 
 export function registerCommands(
   context: vscode.ExtensionContext,
   treeProvider: ExplorerTreeProvider,
   serverManager: ServerManager,
-  statusBarManager: StatusBarManager
+  statusBarManager: StatusBarManager,
+  treeView: vscode.TreeView<vscode.TreeItem>
 ): void {
 
-  // Go to file
+  // Track clicks for double-click detection
+  let lastClickTime = 0;
+  let lastClickedItem: vscode.TreeItem | undefined;
+  const DOUBLE_CLICK_THRESHOLD = 400; // ms
+
+  // Handle tree view selection (for double-click detection)
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.goToFile', async (filePath: string) => {
+    treeView.onDidChangeSelection(async (e) => {
+      const item = e.selection[0];
+      if (!item) return;
+
+      const now = Date.now();
+      const filePath = getFilePathFromItem(item);
+
+      // Check for double-click
+      if (filePath && lastClickedItem === item && (now - lastClickTime) < DOUBLE_CLICK_THRESHOLD) {
+        // Double-click detected - open file
+        try {
+          const doc = await vscode.workspace.openTextDocument(filePath);
+          await vscode.window.showTextDocument(doc);
+        } catch (error) {
+          vscode.window.showErrorMessage(`Failed to open file: ${filePath}`);
+        }
+        lastClickedItem = undefined;
+        lastClickTime = 0;
+      } else {
+        lastClickedItem = item;
+        lastClickTime = now;
+      }
+    })
+  );
+
+  // Go to file - accepts either a file path string or a tree item
+  context.subscriptions.push(
+    vscode.commands.registerCommand('nextjsExplorer.goToFile', async (itemOrPath: unknown) => {
+      const filePath = getFilePathFromItem(itemOrPath);
+      if (!filePath) {
+        vscode.window.showWarningMessage('No file path available for this item');
+        return;
+      }
+
       try {
         const doc = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(doc);

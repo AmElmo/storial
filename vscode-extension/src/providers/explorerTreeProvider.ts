@@ -8,7 +8,11 @@ import {
   ContextTreeItem,
   UtilityTreeItem,
   FolderTreeItem,
-  MessageTreeItem
+  MessageTreeItem,
+  DetailSectionItem,
+  DetailLinkItem,
+  PropItem,
+  DetailItemData
 } from './treeItems';
 import type { ScanResult, PageInfo, ComponentInfo } from '../types/api';
 
@@ -101,6 +105,36 @@ export class ExplorerTreeProvider implements vscode.TreeDataProvider<vscode.Tree
       return element.children;
     }
 
+    // Page details
+    if (element instanceof PageTreeItem && element.hasDetails) {
+      return this.getPageDetails(element.page);
+    }
+
+    // Component details
+    if (element instanceof ComponentTreeItem && element.hasDetails) {
+      return this.getComponentDetails(element.component);
+    }
+
+    // Hook details
+    if (element instanceof HookTreeItem && element.hasDetails) {
+      return this.getHookDetails(element.hook);
+    }
+
+    // Context details
+    if (element instanceof ContextTreeItem && element.hasDetails) {
+      return this.getContextDetails(element.context);
+    }
+
+    // Utility details
+    if (element instanceof UtilityTreeItem && element.hasDetails) {
+      return this.getUtilityDetails(element.utility);
+    }
+
+    // Detail section children
+    if (element instanceof DetailSectionItem) {
+      return element.items.map(item => new DetailLinkItem(item.name, item.filePath, 'circle-small'));
+    }
+
     return [];
   }
 
@@ -147,6 +181,143 @@ export class ExplorerTreeProvider implements vscode.TreeDataProvider<vscode.Tree
       default:
         return [];
     }
+  }
+
+  // Helper to look up component file path by name
+  private getComponentFilePath(name: string): string | undefined {
+    return this.scanResult?.components.find(c => c.name === name)?.filePath;
+  }
+
+  // Helper to look up page file path by route
+  private getPageFilePath(route: string): string | undefined {
+    return this.scanResult?.pages.find(p => p.route === route)?.filePath;
+  }
+
+  // Detail views for expanded items
+  private getPageDetails(page: PageInfo): vscode.TreeItem[] {
+    const items: vscode.TreeItem[] = [];
+
+    if (page.components.length > 0) {
+      const componentItems: DetailItemData[] = page.components.map(name => ({
+        name,
+        filePath: this.getComponentFilePath(name)
+      }));
+      items.push(new DetailSectionItem('Components used', componentItems, 'symbol-class'));
+    }
+
+    if (page.linksTo.length > 0) {
+      const linkItems: DetailItemData[] = page.linksTo.map(route => ({
+        name: route,
+        filePath: this.getPageFilePath(route)
+      }));
+      items.push(new DetailSectionItem('Links to', linkItems, 'link'));
+    }
+
+    if (page.dataDependencies.length > 0) {
+      const deps: DetailItemData[] = page.dataDependencies.map(d => ({
+        name: `${d.type}: ${d.source}`,
+        filePath: undefined
+      }));
+      items.push(new DetailSectionItem('Data dependencies', deps, 'database'));
+    }
+
+    return items;
+  }
+
+  private getComponentDetails(component: ComponentInfo): vscode.TreeItem[] {
+    const items: vscode.TreeItem[] = [];
+
+    if (component.usedInPages.length > 0) {
+      const pageItems: DetailItemData[] = component.usedInPages.map(route => ({
+        name: route,
+        filePath: this.getPageFilePath(route)
+      }));
+      items.push(new DetailSectionItem('Used in pages', pageItems, 'file'));
+    }
+
+    if (component.usedInComponents.length > 0) {
+      const compItems: DetailItemData[] = component.usedInComponents.map(name => ({
+        name,
+        filePath: this.getComponentFilePath(name)
+      }));
+      items.push(new DetailSectionItem('Used in components', compItems, 'symbol-class'));
+    }
+
+    if (component.props.length > 0) {
+      const propItems: DetailItemData[] = component.props.map(p => ({
+        name: `${p.name}: ${p.type}${p.required ? '' : '?'}`,
+        filePath: undefined
+      }));
+      items.push(new DetailSectionItem('Props', propItems, 'symbol-property'));
+    }
+
+    if (component.dataDependencies.length > 0) {
+      const deps: DetailItemData[] = component.dataDependencies.map(d => ({
+        name: `${d.type}: ${d.source}`,
+        filePath: undefined
+      }));
+      items.push(new DetailSectionItem('Data dependencies', deps, 'database'));
+    }
+
+    return items;
+  }
+
+  private getHookDetails(hook: { usedIn: string[]; dependencies: string[] }): vscode.TreeItem[] {
+    const items: vscode.TreeItem[] = [];
+
+    if (hook.usedIn.length > 0) {
+      const usedInItems: DetailItemData[] = hook.usedIn.map(name => ({
+        name,
+        filePath: this.getComponentFilePath(name)
+      }));
+      items.push(new DetailSectionItem('Used in', usedInItems, 'references'));
+    }
+
+    if (hook.dependencies.length > 0) {
+      const depItems: DetailItemData[] = hook.dependencies.map(name => ({
+        name,
+        filePath: undefined
+      }));
+      items.push(new DetailSectionItem('Dependencies', depItems, 'package'));
+    }
+
+    return items;
+  }
+
+  private getContextDetails(context: { usedIn: string[] }): vscode.TreeItem[] {
+    const items: vscode.TreeItem[] = [];
+
+    if (context.usedIn.length > 0) {
+      const usedInItems: DetailItemData[] = context.usedIn.map(name => ({
+        name,
+        filePath: this.getComponentFilePath(name)
+      }));
+      items.push(new DetailSectionItem('Used in', usedInItems, 'references'));
+    }
+
+    return items;
+  }
+
+  private getUtilityDetails(utility: { exports: string[]; usedIn: string[] }): vscode.TreeItem[] {
+    const items: vscode.TreeItem[] = [];
+
+    if (utility.exports.length > 0) {
+      const exportItems: DetailItemData[] = utility.exports.map(name => ({
+        name,
+        filePath: undefined
+      }));
+      items.push(new DetailSectionItem('Exports', exportItems, 'symbol-function'));
+    }
+
+    if (utility.usedIn.length > 0) {
+      const usedInItems: DetailItemData[] = utility.usedIn.map(name => ({
+        name,
+        filePath: this.getComponentFilePath(name)
+      }));
+      items.push(new DetailSectionItem('Used in', usedInItems, 'references'));
+    }
+
+    return items;
   }
 
   private groupPagesByFolder(pages: PageInfo[]): vscode.TreeItem[] {

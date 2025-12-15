@@ -66,8 +66,8 @@ async function activate(context) {
     });
     // Set API client for status bar
     statusBarManager.setApiClient(serverManager.getApiClient());
-    // Register all commands
-    (0, commands_1.registerCommands)(context, treeProvider, serverManager, statusBarManager);
+    // Register all commands (pass treeView for double-click handling)
+    (0, commands_1.registerCommands)(context, treeProvider, serverManager, statusBarManager, treeView);
     // Add disposables
     context.subscriptions.push(treeView);
     context.subscriptions.push(statusBarManager);

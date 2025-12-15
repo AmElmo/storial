@@ -36,9 +36,65 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerCommands = registerCommands;
 const vscode = __importStar(require("vscode"));
 const treeItems_1 = require("../providers/treeItems");
-function registerCommands(context, treeProvider, serverManager, statusBarManager) {
-    // Go to file
-    context.subscriptions.push(vscode.commands.registerCommand('nextjsExplorer.goToFile', async (filePath) => {
+// Helper to extract file path from various tree item types
+function getFilePathFromItem(item) {
+    if (typeof item === 'string') {
+        return item;
+    }
+    if (item instanceof treeItems_1.PageTreeItem) {
+        return item.filePath;
+    }
+    if (item instanceof treeItems_1.ComponentTreeItem) {
+        return item.filePath;
+    }
+    if (item instanceof treeItems_1.HookTreeItem) {
+        return item.filePath;
+    }
+    if (item instanceof treeItems_1.ContextTreeItem) {
+        return item.filePath;
+    }
+    if (item instanceof treeItems_1.UtilityTreeItem) {
+        return item.filePath;
+    }
+    return undefined;
+}
+function registerCommands(context, treeProvider, serverManager, statusBarManager, treeView) {
+    // Track clicks for double-click detection
+    let lastClickTime = 0;
+    let lastClickedItem;
+    const DOUBLE_CLICK_THRESHOLD = 400; // ms
+    // Handle tree view selection (for double-click detection)
+    context.subscriptions.push(treeView.onDidChangeSelection(async (e) => {
+        const item = e.selection[0];
+        if (!item)
+            return;
+        const now = Date.now();
+        const filePath = getFilePathFromItem(item);
+        // Check for double-click
+        if (filePath && lastClickedItem === item && (now - lastClickTime) < DOUBLE_CLICK_THRESHOLD) {
+            // Double-click detected - open file
+            try {
+                const doc = await vscode.workspace.openTextDocument(filePath);
+                await vscode.window.showTextDocument(doc);
+            }
+            catch (error) {
+                vscode.window.showErrorMessage(`Failed to open file: ${filePath}`);
+            }
+            lastClickedItem = undefined;
+            lastClickTime = 0;
+        }
+        else {
+            lastClickedItem = item;
+            lastClickTime = now;
+        }
+    }));
+    // Go to file - accepts either a file path string or a tree item
+    context.subscriptions.push(vscode.commands.registerCommand('nextjsExplorer.goToFile', async (itemOrPath) => {
+        const filePath = getFilePathFromItem(itemOrPath);
+        if (!filePath) {
+            vscode.window.showWarningMessage('No file path available for this item');
+            return;
+        }
         try {
             const doc = await vscode.workspace.openTextDocument(filePath);
             await vscode.window.showTextDocument(doc);
