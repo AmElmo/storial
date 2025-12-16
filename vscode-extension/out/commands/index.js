@@ -159,6 +159,39 @@ function registerCommands(context, treeProvider, serverManager, statusBarManager
         const name = item instanceof treeItems_1.ComponentTreeItem
             ? item.component.name
             : item.page.route || item.page.fileName;
+        // Show provider selection
+        const providerChoice = await vscode.window.showQuickPick([
+            {
+                label: '$(cloud) Storial Cloud',
+                description: 'Coming soon - No API key needed',
+                detail: 'Premium AI generation with optimized prompts',
+                provider: 'storial-cloud'
+            },
+            {
+                label: '$(server) Local LLM (LM Studio)',
+                description: 'Free - Requires LM Studio running locally',
+                detail: 'Use your own local model, no API key needed',
+                provider: 'local'
+            },
+            {
+                label: '$(key) OpenAI',
+                description: 'Requires API key configured in server',
+                detail: 'Uses GPT-4o-mini',
+                provider: 'openai'
+            },
+            {
+                label: '$(globe) OpenRouter',
+                description: 'Requires API key configured in server',
+                detail: 'Access to Claude, GPT-4, Gemini, and 20+ models',
+                provider: 'openrouter'
+            }
+        ], {
+            placeHolder: 'Select AI provider for story generation',
+            title: 'Generate Story'
+        });
+        if (!providerChoice) {
+            return; // User cancelled
+        }
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: `Generating story for ${name}...`,
@@ -166,7 +199,7 @@ function registerCommands(context, treeProvider, serverManager, statusBarManager
         }, async () => {
             try {
                 const apiClient = serverManager.getApiClient();
-                const result = await apiClient.generateStory(type, name);
+                const result = await apiClient.generateStory(type, name, providerChoice.provider);
                 if (result.success) {
                     const storyCount = result.stories?.stories?.length || 0;
                     vscode.window.showInformationMessage(`Generated ${storyCount} stories for ${name}`);
@@ -174,7 +207,23 @@ function registerCommands(context, treeProvider, serverManager, statusBarManager
                     await statusBarManager.updateStats();
                 }
                 else {
-                    vscode.window.showErrorMessage(`Story generation failed: ${result.error || result.message}`);
+                    // Check if this is the "coming soon" response from storial-cloud
+                    if (result.comingSoon) {
+                        const action = await vscode.window.showInformationMessage('Storial Cloud is coming soon! Premium AI story generation without requiring your own API key.', 'Join Waitlist', 'Use Local LLM', 'Use OpenRouter');
+                        if (action === 'Join Waitlist') {
+                            vscode.env.openExternal(vscode.Uri.parse('https://storial.dev/waitlist'));
+                        }
+                        else if (action === 'Use Local LLM') {
+                            // Retry with local provider
+                            vscode.commands.executeCommand('storial.generateStory', item);
+                        }
+                        else if (action === 'Use OpenRouter') {
+                            vscode.env.openExternal(vscode.Uri.parse('https://openrouter.ai/keys'));
+                        }
+                    }
+                    else {
+                        vscode.window.showErrorMessage(`Story generation failed: ${result.error || result.message}`);
+                    }
                 }
             }
             catch (error) {

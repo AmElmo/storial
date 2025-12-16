@@ -125,7 +125,7 @@ export interface ScanOverviewData {
   };
 }
 
-export type LLMProvider = 'local' | 'openai' | 'openrouter';
+export type LLMProvider = 'local' | 'openai' | 'openrouter' | 'storial-cloud';
 
 export interface LLMGenerateResult {
   success: boolean;
@@ -138,4 +138,10 @@ export interface LLMGenerateResult {
   filePath?: string;
   error?: string;
   hint?: string;
+  comingSoon?: boolean;
+  alternatives?: Array<{
+    provider: LLMProvider;
+    name: string;
+    description: string;
+  }>;
 }

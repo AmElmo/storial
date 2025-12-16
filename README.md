@@ -1,234 +1,252 @@
-# Storial ✨
+# Storial
 
-AI-powered component stories for React/Next.js - like Storybook, but magical.
+> AI-powered component stories for React/Next.js - like Storybook, but magical.
 
-See your pages, components, and their relationships at a glance, with AI-generated stories and previews.
+Storial scans your React/Next.js project and gives you instant visibility into your codebase: pages, components, hooks, contexts, utilities, and their relationships. Generate AI-powered stories for isolated component testing and documentation.
 
-## Features (Heuristic - High Reliability)
+## Features
+
+### Project Analysis (Free & Open Source)
 
 | Feature | Reliability | Description |
 |---------|-------------|-------------|
-| 📄 **Page/Route Detection** | ~95% | Lists all pages/routes (Next.js App/Pages Router, React Router) |
-| 🧩 **Component Detection** | ~95% | Scans `/components/`, finds `.tsx` files |
-| 📦 **Import Parsing** | ~98% | Extracts `import X from Y` statements |
-| 🔗 **Component → Page Mapping** | ~95% | Shows which components are used on which pages |
-| 🔗 **Link Detection** | ~85% | Parses `<Link href>`, `router.push()` |
-| 📝 **Source Code Display** | 100% | View any file's source code |
-| ⚡ **Client/Server Detection** | ~98% | Checks `'use client'` directive |
+| **Page/Route Detection** | ~95% | Next.js App/Pages Router, React Router |
+| **Component Detection** | ~95% | Finds all components with props and types |
+| **Hook Detection** | ~95% | Custom hooks with dependencies |
+| **Context Detection** | ~95% | React contexts and providers |
+| **Utility Detection** | ~95% | Helper functions and their usage |
+| **Relationship Mapping** | ~95% | Which components use what |
+| **Unused Code Detection** | ~95% | Find dead code instantly |
+| **Client/Server Detection** | ~98% | `'use client'` directive detection |
+| **Data Dependencies** | ~85% | fetch, Prisma, Drizzle, React Query, SWR |
 
-## Coming Soon (AI-Powered)
+### AI Story Generation
 
-- 🎭 **Story Generation** - Auto-generate component stories
-- 📊 **Mock Data** - AI-generated realistic mock data
-- 📖 **Documentation** - Auto-generated component docs
-- 👁️ **Component Preview** - Isolated component preview with mocks
+Generate comprehensive component stories with:
+- Multiple states (default, loading, error, empty)
+- Prop variations
+- Mock data for API calls
+- Theme variants (light/dark)
+- Viewport testing (mobile, tablet, desktop)
+
+**Supported LLM Providers:**
+- **Local LLM** - Use LM Studio (free, offline)
+- **OpenAI** - GPT-4o-mini
+- **OpenRouter** - Claude, GPT-4, Gemini, and 20+ models
+
+### VS Code Extension
+
+- Tree view with hierarchical navigation
+- Click to open source files
+- Right-click to generate stories
+- Status bar with server status and stats
+- Integrated web UI
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Clone and Install
 
 ```bash
+git clone https://github.com/amelmo/storial.git
 cd storial
 npm install
 ```
 
-### 2. Start the Explorer
+### 2. Start the Server
 
 ```bash
 npm run dev
 ```
 
 This starts:
-- **Server** on `http://localhost:3050` (API for scanning projects)
-- **UI** on `http://localhost:5180` (Web interface)
+- **API Server** on `http://localhost:3050`
+- **Web UI** on `http://localhost:5180`
 
-### 3. Enter Your Project Path
+### 3. Set Your Project Path
 
-Open `http://localhost:5180` in your browser and enter the **absolute path** to your React/Next.js project:
+Open `http://localhost:5180` and enter the absolute path to your React/Next.js project:
 
 ```
-/Users/yourname/projects/my-app
+/Users/yourname/projects/my-nextjs-app
 ```
 
-The explorer will scan the project and show you:
-- All pages with their routes
-- All components
-- Relationships between them
-- Data dependencies (fetch calls, React Query, etc.)
+### 4. Generate Stories (Optional)
+
+For AI story generation, you'll need one of:
+
+**Option A: Local LLM (Free)**
+1. Download [LM Studio](https://lmstudio.ai/)
+2. Load a model and start the local server (port 1234)
+3. Generate stories - no API key needed!
+
+**Option B: OpenAI**
+1. Get an API key from [OpenAI](https://platform.openai.com/api-keys)
+2. Set it in the server configuration
+3. Select "OpenAI" when generating
+
+**Option C: OpenRouter**
+1. Get an API key from [OpenRouter](https://openrouter.ai/keys)
+2. Set it in the server configuration
+3. Choose from 20+ models (Claude, GPT-4, Gemini, etc.)
+
+## VS Code Extension
+
+### Installation
+
+1. Open VS Code
+2. Go to Extensions (Cmd+Shift+X)
+3. Search for "Storial"
+4. Click Install
+
+Or install from VSIX:
+```bash
+cd vscode-extension
+npm install
+npm run package
+# Install the generated .vsix file
+```
+
+### Usage
+
+1. Open the Storial panel in the sidebar
+2. Start the server when prompted
+3. Browse your project structure
+4. Right-click any component → "Generate Story"
 
 ## Supported Frameworks
 
-### Router Types
-- ✅ **Next.js App Router** (`app/` directory with `page.tsx` files)
-- ✅ **Next.js Pages Router** (`pages/` directory)
-- ✅ **React Router** (Vite + React Router setup)
+### Routers
+- Next.js App Router (`app/` directory)
+- Next.js Pages Router (`pages/` directory)
+- React Router (Vite + React Router)
 
-### Data Dependencies Detected
+### Data Fetching
 - `fetch()` calls
-- Prisma patterns (`prisma.*.findMany()`, etc.)
-- Drizzle patterns
+- Prisma (`prisma.*.findMany()`, etc.)
+- Drizzle ORM
 - React Query (`useQuery`)
 - SWR (`useSWR`)
 - Server Actions
 
-### Component Locations Scanned
+### Component Locations
+Storial scans these directories:
 - `components/`
 - `src/components/`
 - `app/components/`
 - `lib/components/`
-
-## Usage
-
-### Viewing Pages
-
-1. Click on **Pages** tab in the sidebar
-2. Select a page to see:
-   - Route path
-   - Components used on this page
-   - Links to other pages
-   - Data dependencies
-
-### Viewing Components
-
-1. Click on **Components** tab in the sidebar
-2. Select a component to see:
-   - Props with types
-   - Which pages use this component
-   - Which other components use it
-   - Imports
-   - Data dependencies
-
-### Preview
-
-- **Pages**: Embed the actual page via iframe (requires dev server running)
-- **Components**: Coming soon with AI-powered story generation
 
 ## Project Structure
 
 ```
 storial/
 ├── server/
-│   ├── index.ts          # Express server
-│   ├── scanner.ts        # Project scanner (pages, components)
-│   └── parser.ts         # AST parsing (imports, links, props)
+│   ├── index.ts           # Express API server
+│   ├── scanner.ts         # Project analysis engine
+│   ├── parser.ts          # Code parsing (imports, props, etc.)
+│   ├── prompt-generator.ts # AI prompt generation
+│   └── llm-logger.ts      # Generation logging
 ├── src/
-│   ├── App.tsx           # Main app component
-│   ├── components/
-│   │   ├── Sidebar.tsx       # Page/component list
-│   │   ├── StructureView.tsx # Relationship view
-│   │   ├── PreviewPane.tsx   # Preview panel
-│   │   └── ProjectSelector.tsx
-│   └── lib/
-│       ├── api.ts        # API client
-│       └── utils.ts      # Utilities
+│   ├── App.tsx            # Web UI
+│   └── components/        # UI components
+├── vscode-extension/
+│   └── src/
+│       ├── extension.ts   # Extension entry
+│       ├── providers/     # Tree view providers
+│       └── commands/      # VS Code commands
 └── README.md
 ```
 
-## API Endpoints
+## API Reference
 
+### Project Management
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/project` | GET | Get current project info |
+| `/api/project` | GET | Get current project |
 | `/api/project` | POST | Set project path |
-| `/api/scan` | POST | Scan a project |
-| `/api/scan` | GET | Get cached scan result |
-| `/api/file` | GET | Read file content |
+| `/api/scan` | POST | Scan project |
+| `/api/scan` | GET | Get cached scan |
+| `/api/scan/overview` | GET | Get overview with stats |
 
-## Tips
+### Story Generation
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stories/generate-with-llm` | POST | Generate stories |
+| `/api/stories/:type/:name` | GET | Get stories for item |
+| `/api/stories` | GET | List all stories |
 
-1. **Large Projects**: The scanner may take a few seconds for large projects
-2. **Private Components**: Components in `node_modules` are ignored
-3. **Test Files**: `.test.tsx`, `.spec.tsx`, and `.stories.tsx` files are excluded
-4. **Dynamic Routes**: Shown as `:param` (e.g., `/blog/:slug`)
+### LLM Configuration
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/llm/settings` | GET/POST | Get/set LLM config |
+| `/api/llm/test` | GET | Test LLM connection |
+| `/api/llm/logs` | GET | List generation logs |
 
-## Suppressing Build Warnings
+## Configuration
 
-When running `npm run build`, you may see warnings like:
+### LLM Settings
 
+Stories are saved in your project's `.explorer/` directory:
 ```
-(!) X is dynamically imported by __Canvas.tsx but also statically imported by Y
-```
-
-**These warnings are harmless.** They occur because the Canvas preview component uses `import.meta.glob()` to dynamically discover components, while those same components are statically imported elsewhere. The build succeeds normally and Canvas is tree-shaken from production bundles.
-
-If you prefer to suppress these warnings, here are optional solutions:
-
-### For Vite + React Projects
-
-Add a plugin to your `vite.config.ts`:
-
-```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [
-    react(),
-    // Optional: Suppress Canvas build warnings
-    {
-      name: 'suppress-canvas-warnings',
-      config() {
-        return {
-          build: {
-            rollupOptions: {
-              onwarn(warning, warn) {
-                // Suppress dynamic/static import warnings for __Canvas.tsx
-                if (warning.message?.includes('__Canvas.tsx')) return;
-                warn(warning);
-              }
-            }
-          }
-        };
-      }
-    }
-  ],
-  // ... rest of your config
-})
+your-project/
+└── .explorer/
+    ├── stories/
+    │   ├── components/    # Component stories
+    │   └── pages/         # Page stories
+    ├── templates/         # Story templates
+    └── llm-logs/          # Generation logs
 ```
 
-### For Next.js Projects
+### Environment Variables
 
-Next.js doesn't use `import.meta.glob`, so these warnings don't appear. The Explorer generates a different Canvas implementation for Next.js that uses explicit component imports instead.
-
-### Alternative: Remove Canvas from Production
-
-If you only need Canvas during development, you can exclude it from builds entirely by adding to `vite.config.ts`:
-
-```typescript
-{
-  name: 'stub-canvas-prod',
-  transform(code, id) {
-    if (id.includes('__Canvas') && process.env.NODE_ENV === 'production') {
-      return 'export default function Canvas() { return null; }';
-    }
-  }
-}
+```bash
+# Optional: Set API keys via environment
+export OPENROUTER_API_KEY=sk-or-...
+export OPENAI_API_KEY=sk-...
 ```
 
-This replaces the entire Canvas file with a no-op component during production builds, completely eliminating the warnings and reducing bundle size.
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Development
+
+```bash
+# Run server in development mode
+npm run dev
+
+# Run VS Code extension in development
+cd vscode-extension
+npm run watch
+# Press F5 in VS Code to launch extension host
+```
 
 ## Roadmap
 
-### Phase 1: Heuristics (Current)
-- [x] Page detection (App/Pages Router, React Router)
-- [x] Component detection
-- [x] Import parsing
-- [x] Link detection
-- [x] Source code display
-- [x] Client/Server component detection
+### Current (v1.0)
+- [x] Project scanning and analysis
+- [x] Component/Hook/Context/Utility detection
+- [x] Relationship mapping
+- [x] Unused code detection
+- [x] AI story generation (Local, OpenAI, OpenRouter)
+- [x] VS Code extension
+- [x] Web UI
 
-### Phase 2: AI Generation (Next)
-- [ ] Story generation for components
-- [ ] Mock data generation
-- [ ] Component documentation
-- [ ] Isolated component preview
-
-### Phase 3: Advanced Features
+### Planned
+- [ ] Component preview with mock injection
 - [ ] Visual component tree diagram
-- [ ] Search across all files
-- [ ] Export relationships as JSON/Mermaid
+- [ ] Export relationships (JSON, Mermaid)
 - [ ] Watch mode for incremental updates
+- [ ] CI/CD integration
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Support
+
+- [GitHub Issues](https://github.com/amelmo/storial/issues) - Bug reports and feature requests
+- [GitHub Discussions](https://github.com/amelmo/storial/discussions) - Questions and ideas
 
 ---
 
-Built with ❤️ by [Storial](https://github.com/amelmo/storial)
+Built with care by the Storial team.

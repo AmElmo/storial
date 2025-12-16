@@ -23,7 +23,7 @@ const log = {
 
 // ==================== TYPES ====================
 
-export type LLMProvider = 'local' | 'openai' | 'openrouter';
+export type LLMProvider = 'local' | 'openai' | 'openrouter' | 'storial-cloud';
 
 // OpenRouter model configuration - easy to add new models
 export interface OpenRouterModel {

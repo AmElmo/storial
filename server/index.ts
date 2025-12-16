@@ -490,14 +490,14 @@ const LLM_DEFAULT_URL = 'http://localhost:1234/v1/chat/completions';
 // OpenAI API settings
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_MODEL = 'gpt-4o-mini'; // Cheaper and effective model for this task
-// TODO: Move to environment variable later
-const OPENAI_API_KEY = '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'; // Replace with your API key
+// Set via environment variable: export OPENAI_API_KEY=sk-...
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
 // OpenRouter API settings
 // Get your API key from https://openrouter.ai/keys
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-// TODO: Move to environment variable later
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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'; // Set via env or replace here
+// Set via environment variable: export OPENROUTER_API_KEY=sk-or-...
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 
 interface LLMSettings {
   url: string;
@@ -573,13 +573,27 @@ app.get('/api/llm/test', async (_req, res) => {
   }
 });
 
-// Generate stories using LLM (local, OpenAI, or OpenRouter)
+// Generate stories using LLM (local, OpenAI, OpenRouter, or Storial Cloud)
 app.post('/api/stories/generate-with-llm', async (req, res) => {
   const { type, name, provider = 'local', model } = req.body;
-  
+
   // Determine provider
   let llmProvider: LLMProvider;
-  if (provider === 'openai') {
+  if (provider === 'storial-cloud') {
+    // Storial Cloud - coming soon
+    return res.status(503).json({
+      success: false,
+      message: 'Storial Cloud is coming soon!',
+      error: 'storial-cloud-coming-soon',
+      hint: 'Storial Cloud will provide premium AI story generation without requiring your own API key. Join the waitlist at https://storial.dev/waitlist',
+      comingSoon: true,
+      alternatives: [
+        { provider: 'local', name: 'Local LLM (LM Studio)', description: 'Free, runs locally, no API key needed' },
+        { provider: 'openai', name: 'OpenAI', description: 'Use your own OpenAI API key' },
+        { provider: 'openrouter', name: 'OpenRouter', description: 'Access 20+ models with one API key' }
+      ]
+    });
+  } else if (provider === 'openai') {
     llmProvider = 'openai';
   } else if (provider === 'openrouter') {
     llmProvider = 'openrouter';
@@ -608,7 +622,8 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
   const providerLabels: Record<LLMProvider, string> = {
     local: 'Local LLM',
     openai: 'OpenAI',
-    openrouter: 'OpenRouter'
+    openrouter: 'OpenRouter',
+    'storial-cloud': 'Storial Cloud'
   };
   
   log.info(`Generating stories with ${providerLabels[llmProvider]}`, { 

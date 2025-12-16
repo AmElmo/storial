@@ -110,7 +110,7 @@ export interface ScanOverviewData {
         totalComponentStories: number;
     };
 }
-export type LLMProvider = 'local' | 'openai' | 'openrouter';
+export type LLMProvider = 'local' | 'openai' | 'openrouter' | 'storial-cloud';
 export interface LLMGenerateResult {
     success: boolean;
     message: string;
@@ -125,5 +125,11 @@ export interface LLMGenerateResult {
     filePath?: string;
     error?: string;
     hint?: string;
+    comingSoon?: boolean;
+    alternatives?: Array<{
+        provider: LLMProvider;
+        name: string;
+        description: string;
+    }>;
 }
 //# sourceMappingURL=api.d.ts.map
