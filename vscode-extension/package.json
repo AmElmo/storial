@@ -4,6 +4,16 @@
   "description": "AI-powered component stories for React/Next.js - like Storybook, but magical",
   "version": "0.1.0",
   "publisher": "amelmo",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AmElmo/storial"
+  },
+  "homepage": "https://github.com/AmElmo/storial#readme",
+  "bugs": {
+    "url": "https://github.com/AmElmo/storial/issues"
+  },
+  "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
   },
