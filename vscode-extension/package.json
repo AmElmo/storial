@@ -1,7 +1,7 @@
 {
-  "name": "nextjs-explorer",
-  "displayName": "NextJS Explorer",
-  "description": "Visual explorer for Next.js/React apps - see pages, components, and their relationships",
+  "name": "storial",
+  "displayName": "Storial",
+  "description": "AI-powered component stories for React/Next.js - like Storybook, but magical",
   "version": "0.1.0",
   "publisher": "amelmo",
   "engines": {
@@ -12,11 +12,13 @@
     "Visualization"
   ],
   "keywords": [
+    "storial",
+    "storybook",
     "nextjs",
     "react",
     "components",
-    "explorer",
-    "visualization"
+    "stories",
+    "ai"
   ],
   "activationEvents": [
     "workspaceContains:**/package.json"
@@ -26,95 +28,95 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "nextjs-explorer",
-          "title": "NextJS Explorer",
+          "id": "storial",
+          "title": "Storial",
           "icon": "resources/icons/explorer.svg"
         }
       ]
     },
     "views": {
-      "nextjs-explorer": [
+      "storial": [
         {
-          "id": "nextjsExplorer",
+          "id": "storialExplorer",
           "name": "Explorer",
-          "contextualTitle": "NextJS Explorer"
+          "contextualTitle": "Storial"
         }
       ]
     },
     "commands": [
       {
-        "command": "nextjsExplorer.refresh",
+        "command": "storial.refresh",
         "title": "Refresh",
         "icon": "$(refresh)",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       },
       {
-        "command": "nextjsExplorer.openInBrowser",
+        "command": "storial.openInBrowser",
         "title": "Open in Browser",
         "icon": "$(link-external)",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       },
       {
-        "command": "nextjsExplorer.goToFile",
+        "command": "storial.goToFile",
         "title": "Go to File",
         "icon": "$(go-to-file)",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       },
       {
-        "command": "nextjsExplorer.generateStory",
+        "command": "storial.generateStory",
         "title": "Generate Story",
         "icon": "$(sparkle)",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       },
       {
-        "command": "nextjsExplorer.viewInWebUI",
+        "command": "storial.viewInWebUI",
         "title": "View in Web UI",
         "icon": "$(link-external)",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       },
       {
-        "command": "nextjsExplorer.startServer",
+        "command": "storial.startServer",
         "title": "Start Server",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       },
       {
-        "command": "nextjsExplorer.stopServer",
+        "command": "storial.stopServer",
         "title": "Stop Server",
-        "category": "NextJS Explorer"
+        "category": "Storial"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "nextjsExplorer.refresh",
-          "when": "view == nextjsExplorer",
+          "command": "storial.refresh",
+          "when": "view == storialExplorer",
           "group": "navigation@1"
         },
         {
-          "command": "nextjsExplorer.openInBrowser",
-          "when": "view == nextjsExplorer",
+          "command": "storial.openInBrowser",
+          "when": "view == storialExplorer",
           "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
-          "command": "nextjsExplorer.generateStory",
-          "when": "view == nextjsExplorer && viewItem =~ /^(component|page)$/",
+          "command": "storial.generateStory",
+          "when": "view == storialExplorer && viewItem =~ /^(component|page)$/",
           "group": "1_actions@1"
         },
         {
-          "command": "nextjsExplorer.viewInWebUI",
-          "when": "view == nextjsExplorer && viewItem =~ /^(component|page)$/",
+          "command": "storial.viewInWebUI",
+          "when": "view == storialExplorer && viewItem =~ /^(component|page)$/",
           "group": "1_actions@2"
         },
         {
-          "command": "nextjsExplorer.goToFile",
-          "when": "view == nextjsExplorer && viewItem =~ /^(component|page|hook|context|utility|detailLink)$/",
+          "command": "storial.goToFile",
+          "when": "view == storialExplorer && viewItem =~ /^(component|page|hook|context|utility|detailLink)$/",
           "group": "2_navigation@1"
         },
         {
-          "command": "nextjsExplorer.goToFile",
-          "when": "view == nextjsExplorer && viewItem =~ /^(component|page|hook|context|utility)$/",
+          "command": "storial.goToFile",
+          "when": "view == storialExplorer && viewItem =~ /^(component|page|hook|context|utility)$/",
           "group": "inline"
         }
       ]

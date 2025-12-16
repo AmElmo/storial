@@ -1096,7 +1096,8 @@ app.get('/api/llm/logs/:filename', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`
 \x1b[36m╔═══════════════════════════════════════════════════════╗
-║           🔍 React/Next.js Explorer Server            ║
+║              ✨ Storial Server                        ║
+║     AI-powered component stories for React/Next.js   ║
 ╠═══════════════════════════════════════════════════════╣
 ║  Server running on http://localhost:${PORT}              ║
 ║                                                       ║
@@ -1104,9 +1105,8 @@ app.listen(PORT, () => {
 ║    ✓ Page/Route Detection                             ║
 ║    ✓ Component Detection & Relationships              ║
 ║    ✓ Hooks, Contexts, Utilities Detection             ║
-║    ✓ AI Stories Prompt Generation                     ║
+║    ✓ AI Stories Generation                            ║
 ║    ✓ Component Preview with Mock Data                 ║
-║    ✓ Server Action Detection & Mocking (NEW)          ║
 ║                                                       ║
 ║  Endpoints:                                           ║
 ║    POST /api/project       - Set project path         ║
@@ -1115,17 +1115,12 @@ app.listen(PORT, () => {
 ║                                                       ║
 ║  Stories:                                             ║
 ║    POST /api/stories/generate-prompt - AI prompt      ║
+║    POST /api/stories/generate-with-llm - Generate     ║
 ║    GET  /api/stories/:type/:name - Get stories        ║
 ║                                                       ║
 ║  Preview:                                             ║
 ║    POST /api/preview/setup - Setup preview route      ║
 ║    GET  /api/preview/status - Check preview status    ║
-║                                                       ║
-║  Server Actions:                                      ║
-║    GET  /api/server-actions - List detected actions   ║
-║    POST /api/server-actions/generate-mocks - Create   ║
-║    POST /api/server-actions/inject-config - Inject    ║
-║    GET  /api/server-actions/config-status - Status    ║
 ║                                                       ║
 ║  🐛 Debug logging ENABLED                             ║
 ╚═══════════════════════════════════════════════════════╝\x1b[0m

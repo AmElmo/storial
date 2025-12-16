@@ -13,7 +13,7 @@ export declare class ServerManager {
     promptToStartServer(): Promise<boolean>;
     startServer(): Promise<boolean>;
     private waitForServer;
-    private getExplorerPath;
+    private getStorialPath;
     stopServer(): void;
     isServerProcessRunning(): boolean;
     showOutput(): void;

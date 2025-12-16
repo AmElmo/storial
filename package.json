@@ -1,7 +1,7 @@
 {
-  "name": "nextjs-explorer",
+  "name": "storial",
   "version": "1.0.0",
-  "description": "Visual explorer for Next.js apps - see pages, components, and their relationships",
+  "description": "AI-powered component stories for React/Next.js - like Storybook, but magical",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:ui\"",

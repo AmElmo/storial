@@ -47,7 +47,7 @@ class ServerManager {
     constructor(context, projectPath) {
         this.projectPath = projectPath;
         this.extensionPath = context.extensionPath;
-        this.outputChannel = vscode.window.createOutputChannel('NextJS Explorer Server');
+        this.outputChannel = vscode.window.createOutputChannel('Storial Server');
         this.apiClient = new apiClient_1.ApiClient(projectPath);
     }
     getApiClient() {
@@ -64,21 +64,21 @@ class ServerManager {
         return false;
     }
     async promptToStartServer() {
-        const choice = await vscode.window.showInformationMessage('NextJS Explorer server is not running.', 'Start Server', "I'll run it manually");
+        const choice = await vscode.window.showInformationMessage('Storial server is not running.', 'Start Server', "I'll run it manually");
         if (choice === 'Start Server') {
             return this.startServer();
         }
         else if (choice === "I'll run it manually") {
-            const explorerPath = this.getExplorerPath();
-            const command = `cd ${explorerPath} && npm run dev`;
+            const storialPath = this.getStorialPath();
+            const command = `cd ${storialPath} && npm run dev`;
             await vscode.env.clipboard.writeText(command);
             vscode.window.showInformationMessage(`Command copied to clipboard. Run it in your terminal to start both the server and web UI.`);
         }
         return false;
     }
     async startServer() {
-        const explorerPath = this.getExplorerPath();
-        this.outputChannel.appendLine(`Starting server from: ${explorerPath}`);
+        const storialPath = this.getStorialPath();
+        this.outputChannel.appendLine(`Starting server from: ${storialPath}`);
         this.outputChannel.show(true);
         try {
             // Use full path to npm since VSCode extension host doesn't inherit shell PATH
@@ -90,7 +90,7 @@ class ServerManager {
             };
             // Use 'dev' instead of 'dev:server' to start both server (3050) and UI (5180)
             this.serverProcess = (0, child_process_1.spawn)(npmPath, ['run', 'dev'], {
-                cwd: explorerPath,
+                cwd: storialPath,
                 shell: false,
                 env
             });
@@ -112,7 +112,7 @@ class ServerManager {
             const ready = await this.waitForServer(15000);
             if (ready) {
                 await this.apiClient.setProjectPath();
-                vscode.window.showInformationMessage('NextJS Explorer server started successfully!');
+                vscode.window.showInformationMessage('Storial server started successfully!');
                 return true;
             }
             else {
@@ -137,9 +137,9 @@ class ServerManager {
         }
         return false;
     }
-    getExplorerPath() {
+    getStorialPath() {
         // The extension is in vscode-extension/ subdirectory
-        // So the main nextjs-explorer is one level up
+        // So the main storial directory is one level up
         return path.resolve(this.extensionPath, '..');
     }
     stopServer() {
@@ -147,7 +147,7 @@ class ServerManager {
             this.outputChannel.appendLine('Stopping server...');
             this.serverProcess.kill();
             this.serverProcess = null;
-            vscode.window.showInformationMessage('NextJS Explorer server stopped.');
+            vscode.window.showInformationMessage('Storial server stopped.');
         }
     }
     isServerProcessRunning() {

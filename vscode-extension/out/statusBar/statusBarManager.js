@@ -42,13 +42,13 @@ class StatusBarManager {
     constructor() {
         // Stats: "47 components | 66% stories"
         this.statsItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-        this.statsItem.command = 'nextjsExplorer.openInBrowser';
-        this.statsItem.tooltip = 'Click to open NextJS Explorer in browser';
-        this.statsItem.text = '$(layers) NextJS Explorer';
+        this.statsItem.command = 'storial.openInBrowser';
+        this.statsItem.tooltip = 'Click to open Storial in browser';
+        this.statsItem.text = '$(layers) Storial';
         this.statsItem.show();
         // Server status indicator
         this.serverItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
-        this.serverItem.command = 'nextjsExplorer.startServer';
+        this.serverItem.command = 'storial.startServer';
         this.serverItem.show();
         this.setServerStatus(false);
     }
@@ -70,7 +70,7 @@ class StatusBarManager {
             }
         }
         catch {
-            this.statsItem.text = '$(layers) NextJS Explorer';
+            this.statsItem.text = '$(layers) Storial';
         }
     }
     setServerStatus(running) {
@@ -78,13 +78,13 @@ class StatusBarManager {
             this.serverItem.text = '$(check) Server';
             this.serverItem.tooltip = 'Server is running';
             this.serverItem.backgroundColor = undefined;
-            this.serverItem.command = 'nextjsExplorer.stopServer';
+            this.serverItem.command = 'storial.stopServer';
         }
         else {
             this.serverItem.text = '$(x) Server';
             this.serverItem.tooltip = 'Server is not running - click to start';
             this.serverItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-            this.serverItem.command = 'nextjsExplorer.startServer';
+            this.serverItem.command = 'storial.startServer';
         }
     }
     dispose() {

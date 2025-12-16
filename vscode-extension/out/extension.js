@@ -43,15 +43,15 @@ const commands_1 = require("./commands");
 let serverManager;
 let statusBarManager;
 async function activate(context) {
-    console.log('NextJS Explorer extension is activating...');
+    console.log('Storial extension is activating...');
     // Get workspace folder as project path
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
-        vscode.window.showWarningMessage('NextJS Explorer: Open a folder to use this extension');
+        vscode.window.showWarningMessage('Storial: Open a folder to use this extension');
         return;
     }
     const projectPath = workspaceFolder.uri.fsPath;
-    console.log(`NextJS Explorer: Project path = ${projectPath}`);
+    console.log(`Storial: Project path = ${projectPath}`);
     // Initialize server manager
     serverManager = new serverManager_1.ServerManager(context, projectPath);
     // Initialize status bar
@@ -60,7 +60,7 @@ async function activate(context) {
     const treeProvider = new explorerTreeProvider_1.ExplorerTreeProvider();
     treeProvider.setApiClient(serverManager.getApiClient());
     // Register tree view
-    const treeView = vscode.window.createTreeView('nextjsExplorer', {
+    const treeView = vscode.window.createTreeView('storialExplorer', {
         treeDataProvider: treeProvider,
         showCollapseAll: true
     });
@@ -77,7 +77,7 @@ async function activate(context) {
     // Check if server is running and prompt if not
     const serverRunning = await serverManager.ensureServerRunning();
     if (serverRunning) {
-        console.log('NextJS Explorer: Server is running');
+        console.log('Storial: Server is running');
         statusBarManager.setServerStatus(true);
         treeProvider.setServerConnected(true);
         // Auto-scan on activation
@@ -85,7 +85,7 @@ async function activate(context) {
         await statusBarManager.updateStats();
     }
     else {
-        console.log('NextJS Explorer: Server is not running');
+        console.log('Storial: Server is not running');
         statusBarManager.setServerStatus(false);
         treeProvider.setServerConnected(false);
         // Prompt user to start server
@@ -98,10 +98,10 @@ async function activate(context) {
             }
         });
     }
-    console.log('NextJS Explorer extension activated successfully');
+    console.log('Storial extension activated successfully');
 }
 function deactivate() {
-    console.log('NextJS Explorer extension is deactivating...');
+    console.log('Storial extension is deactivating...');
     serverManager?.dispose();
     statusBarManager?.dispose();
 }

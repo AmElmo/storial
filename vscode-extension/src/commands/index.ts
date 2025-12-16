@@ -75,7 +75,7 @@ export function registerCommands(
 
   // Go to file - accepts either a file path string or a tree item
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.goToFile', async (itemOrPath: unknown) => {
+    vscode.commands.registerCommand('storial.goToFile', async (itemOrPath: unknown) => {
       const filePath = getFilePathFromItem(itemOrPath);
       if (!filePath) {
         vscode.window.showWarningMessage('No file path available for this item');
@@ -93,7 +93,7 @@ export function registerCommands(
 
   // Open in browser
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.openInBrowser', async () => {
+    vscode.commands.registerCommand('storial.openInBrowser', async () => {
       const url = vscode.Uri.parse('http://localhost:5180');
       await vscode.env.openExternal(url);
     })
@@ -101,7 +101,7 @@ export function registerCommands(
 
   // Refresh tree
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.refresh', async () => {
+    vscode.commands.registerCommand('storial.refresh', async () => {
       // First check if server is running
       const running = await serverManager.isServerRunning();
       if (!running) {
@@ -120,7 +120,7 @@ export function registerCommands(
 
   // Start server
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.startServer', async () => {
+    vscode.commands.registerCommand('storial.startServer', async () => {
       const running = await serverManager.isServerRunning();
       if (running) {
         vscode.window.showInformationMessage('Server is already running');
@@ -139,7 +139,7 @@ export function registerCommands(
 
   // Stop server
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.stopServer', async () => {
+    vscode.commands.registerCommand('storial.stopServer', async () => {
       if (serverManager.isServerProcessRunning()) {
         serverManager.stopServer();
         statusBarManager.setServerStatus(false);
@@ -154,7 +154,7 @@ export function registerCommands(
 
   // Generate story
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.generateStory', async (item: ComponentTreeItem | PageTreeItem) => {
+    vscode.commands.registerCommand('storial.generateStory', async (item: ComponentTreeItem | PageTreeItem) => {
       if (!item) {
         vscode.window.showWarningMessage('Select a component or page first');
         return;
@@ -196,7 +196,7 @@ export function registerCommands(
 
   // View in Web UI
   context.subscriptions.push(
-    vscode.commands.registerCommand('nextjsExplorer.viewInWebUI', async (item: ComponentTreeItem | PageTreeItem) => {
+    vscode.commands.registerCommand('storial.viewInWebUI', async (item: ComponentTreeItem | PageTreeItem) => {
       if (!item) {
         vscode.window.showWarningMessage('Select a component or page first');
         return;

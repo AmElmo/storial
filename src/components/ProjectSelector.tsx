@@ -38,9 +38,9 @@ export function ProjectSelector({ onSelect, loading, error }: ProjectSelectorPro
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 mb-4 shadow-lg shadow-purple-500/25">
           <Sparkles className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-white mb-2">Next.js Explorer</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Storial</h1>
         <p className="text-slate-400">
-          Visualize your pages, components, and their relationships
+          AI-powered component stories for React/Next.js
         </p>
       </div>
 

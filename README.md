@@ -1,6 +1,8 @@
-# React/Next.js Explorer 🔍
+# Storial ✨
 
-A visual explorer for React and Next.js applications. See your pages, components, and their relationships at a glance.
+AI-powered component stories for React/Next.js - like Storybook, but magical.
+
+See your pages, components, and their relationships at a glance, with AI-generated stories and previews.
 
 ## Features (Heuristic - High Reliability)
 
@@ -26,7 +28,7 @@ A visual explorer for React and Next.js applications. See your pages, components
 ### 1. Install Dependencies
 
 ```bash
-cd nextjs-explorer
+cd storial
 npm install
 ```
 
@@ -104,7 +106,7 @@ The explorer will scan the project and show you:
 ## Project Structure
 
 ```
-nextjs-explorer/
+storial/
 ├── server/
 │   ├── index.ts          # Express server
 │   ├── scanner.ts        # Project scanner (pages, components)
@@ -229,4 +231,4 @@ This replaces the entire Canvas file with a no-op component during production bu
 
 ---
 
-Built with ❤️ for the React/Next.js community
+Built with ❤️ by [Storial](https://github.com/amelmo/storial)
