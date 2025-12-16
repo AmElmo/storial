@@ -767,7 +767,7 @@ export function StoriesManager({ onBack }: StoriesManagerProps) {
                 <li>Add your API key: <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">
                   {selectedProvider === 'openrouter' ? 'OPENROUTER_API_KEY=your-key' : 'OPENAI_API_KEY=your-key'}
                 </code></li>
-                <li>Restart the Storial server</li>
+                <li>Re-select your project in Storial (to reload .env)</li>
               </ol>
             </div>
 

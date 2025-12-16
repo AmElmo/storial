@@ -15,6 +15,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.19.2",
     "glob": "^10.3.10",
     "lucide-react": "^0.378.0",
@@ -40,4 +41,3 @@
     "vite": "^5.2.11"
   }
 }
-

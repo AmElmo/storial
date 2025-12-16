@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { scanNextJsProject } from './scanner.js';
@@ -7,7 +8,19 @@ import { LLMLogEntry, LLMProvider, createLogEntry, saveLLMLog, listLLMLogs, getL
 // Note: Server action mocking removed due to Next.js/Turbopack limitations
 // Keeping mock-generator.ts and build-config-injector.ts files for potential future use
 import fs from 'fs/promises';
+import fss from 'fs';
 import path from 'path';
+
+// Load .env from target project directory
+function loadProjectEnv(projectPath: string): void {
+  const envPath = path.join(projectPath, '.env');
+  if (fss.existsSync(envPath)) {
+    dotenv.config({ path: envPath, override: true });
+    console.log(`\x1b[32m[SERVER ✓]\x1b[0m Loaded .env from ${envPath}`);
+  } else {
+    console.log(`\x1b[33m[SERVER ⚠]\x1b[0m No .env file found at ${envPath}`);
+  }
+}
 
 const app = express();
 const PORT = 3050;
@@ -219,7 +232,10 @@ app.post('/api/project', async (req, res) => {
 
     currentProjectPath = projectPath;
     cachedScanResult = null; // Clear cache when project changes
-    
+
+    // Load .env from target project for API keys
+    loadProjectEnv(projectPath);
+
     log.success(`Project path set to: ${projectPath}`);
     res.json({ success: true, path: projectPath });
   } catch (error) {
@@ -490,14 +506,18 @@ const LLM_DEFAULT_URL = 'http://localhost:1234/v1/chat/completions';
 // OpenAI API settings
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_MODEL = 'gpt-4o-mini'; // Cheaper and effective model for this task
-// Set via environment variable: export OPENAI_API_KEY=sk-...
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+// API key loaded from target project's .env file
+function getOpenAIKey(): string {
+  return process.env.OPENAI_API_KEY || '';
+}
 
 // OpenRouter API settings
 // Get your API key from https://openrouter.ai/keys
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-// Set via environment variable: export OPENROUTER_API_KEY=sk-or-...
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+// API key loaded from target project's .env file
+function getOpenRouterKey(): string {
+  return process.env.OPENROUTER_API_KEY || '';
+}
 
 interface LLMSettings {
   url: string;
@@ -707,29 +727,31 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
     // Build headers based on provider
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (llmProvider === 'openai') {
-      if (!OPENAI_API_KEY) {
+      const openaiKey = getOpenAIKey();
+      if (!openaiKey) {
         log.error('OpenAI API key not configured');
         return res.status(400).json({
           success: false,
           message: 'OpenAI API key not configured',
-          error: 'Please add your OpenAI API key in server/index.ts',
-          hint: 'Set the OPENAI_API_KEY constant with your API key'
+          error: 'Please add OPENAI_API_KEY to your project\'s .env file',
+          hint: 'Create a .env file in your project root and add: OPENAI_API_KEY=your-key-here'
         });
       }
-      headers['Authorization'] = `Bearer ${OPENAI_API_KEY}`;
+      headers['Authorization'] = `Bearer ${openaiKey}`;
     } else if (llmProvider === 'openrouter') {
-      if (!OPENROUTER_API_KEY) {
+      const openrouterKey = getOpenRouterKey();
+      if (!openrouterKey) {
         log.error('OpenRouter API key not configured');
         return res.status(400).json({
           success: false,
           message: 'OpenRouter API key not configured',
-          error: 'Please set your OpenRouter API key',
-          hint: 'Set the OPENROUTER_API_KEY environment variable or update server/index.ts'
+          error: 'Please add OPENROUTER_API_KEY to your project\'s .env file',
+          hint: 'Create a .env file in your project root and add: OPENROUTER_API_KEY=your-key-here'
         });
       }
-      headers['Authorization'] = `Bearer ${OPENROUTER_API_KEY}`;
-      headers['HTTP-Referer'] = 'https://specwright.dev'; // Required by OpenRouter
-      headers['X-Title'] = 'Specwright Explorer'; // Optional but recommended
+      headers['Authorization'] = `Bearer ${openrouterKey}`;
+      headers['HTTP-Referer'] = 'https://storial.dev'; // Required by OpenRouter
+      headers['X-Title'] = 'Storial'; // Optional but recommended
     }
     
     // Call the LLM (local, OpenAI, or OpenRouter)

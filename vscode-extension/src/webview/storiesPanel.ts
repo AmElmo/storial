@@ -268,9 +268,9 @@ export class StoriesPanel {
       if (action === 'Setup Instructions') {
         await vscode.window.showInformationMessage(
           `To configure ${providerInfo.name}:\n\n` +
-          `1. Create a .env file in your project root (or server directory)\n` +
+          `1. Create a .env file in your project root\n` +
           `2. Add: ${providerInfo.envVar}=your_api_key_here\n` +
-          `3. Restart the Storial server`,
+          `3. Re-select your project in Storial (to reload .env)`,
           { modal: true },
           'OK'
         );
