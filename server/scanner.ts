@@ -1557,7 +1557,7 @@ async function scanServerActionFiles(projectPath: string): Promise<ServerActionF
       '**/node_modules/**', 
       '**/.next/**', 
       '**/dist/**',
-      '**/.explorer/**',
+      '**/.storial/**',
       '**/build/**',
       '**/.git/**'
     ],

@@ -114,12 +114,12 @@ async function injectViteConfig(
     const injectedContent = injectViteAliasCode(content, aliasCode);
     
     // Create backup
-    const backupPath = configPath + '.explorer-backup';
+    const backupPath = configPath + '.storial-backup';
     await fs.writeFile(backupPath, content, 'utf-8');
-    
+
     // Write modified config
     await fs.writeFile(configPath, injectedContent, 'utf-8');
-    
+
     log.success(`Injected Vite config with ${Object.keys(aliasEntries).length} aliases`);
     
     return {
@@ -184,8 +184,8 @@ async function injectNextConfig(
     // Generate alias entries
     const aliasEntries = generateNextAliases(projectPath, mockServerActions);
     
-    // Step 1: Create the explorer-aliases helper file
-    const aliasHelperPath = path.join(projectPath, '.explorer', 'next-aliases.js');
+    // Step 1: Create the storial-aliases helper file
+    const aliasHelperPath = path.join(projectPath, '.storial', 'next-aliases.js');
     const aliasHelperContent = generateNextAliasHelperFile(aliasEntries);
     await fs.mkdir(path.dirname(aliasHelperPath), { recursive: true });
     await fs.writeFile(aliasHelperPath, aliasHelperContent, 'utf-8');
@@ -203,17 +203,17 @@ async function injectNextConfig(
     const injectedContent = injectNextConfigWithHelper(content, configFileName);
     
     // Create backup
-    const backupPath = configPath + '.explorer-backup';
+    const backupPath = configPath + '.storial-backup';
     await fs.writeFile(backupPath, content, 'utf-8');
-    
+
     // Write modified config
     await fs.writeFile(configPath, injectedContent, 'utf-8');
-    
+
     log.success(`Injected Next.js config with ${Object.keys(aliasEntries).length} aliases`);
     
     return {
       success: true,
-      message: 'Next.js config updated. Restart dev server with: EXPLORER_PREVIEW=true npm run dev',
+      message: 'Next.js config updated. Restart dev server with: STORIAL_PREVIEW=true npm run dev',
       configFile: configPath,
       backupFile: backupPath,
       aliasesAdded: Object.keys(aliasEntries),
@@ -230,7 +230,7 @@ async function injectNextConfig(
 
 /**
  * Generate a helper file that exports the alias configuration
- * This file is imported by next.config when EXPLORER_PREVIEW is set
+ * This file is imported by next.config when STORIAL_PREVIEW is set
  */
 function generateNextAliasHelperFile(aliases: Record<string, string>): string {
   const turboAliasLines = Object.entries(aliases)
@@ -245,17 +245,17 @@ function generateNextAliasHelperFile(aliases: Record<string, string>): string {
     .join(',\n');
   
   return `/**
- * Explorer Server Action Mocking - Auto-generated
- * 
+ * Storial Server Action Mocking - Auto-generated
+ *
  * This file provides alias configuration for mocking server actions in preview mode.
- * It is only active when EXPLORER_PREVIEW=true environment variable is set.
- * 
- * Mock files are located at: __explorer_mocks__/
- * 
+ * It is only active when STORIAL_PREVIEW=true environment variable is set.
+ *
+ * Mock files are located at: __storial_mocks__/
+ *
  * DO NOT EDIT - This file is regenerated when you setup preview
  */
 
-const isPreview = process.env.EXPLORER_PREVIEW === 'true';
+const isPreview = process.env.STORIAL_PREVIEW === 'true';
 
 // Turbopack aliases (Next.js 15+ dev server)
 // Source uses @/ (matching user imports), target is bare path from project root
@@ -269,19 +269,19 @@ ${webpackAliasLines}
 } : {};
 
 /**
- * Merges Explorer mocking config into your Next.js config
- * Call this in your next.config: mergeExplorerConfig(yourConfig)
- * 
+ * Merges Storial mocking config into your Next.js config
+ * Call this in your next.config: mergeStorialConfig(yourConfig)
+ *
  * Note: Next.js 15+ uses top-level 'turbopack' key instead of 'experimental.turbo'
  */
-function mergeExplorerConfig(config) {
+function mergeStorialConfig(config) {
   if (!isPreview) {
     return config;
   }
-  
-  console.log('[Explorer] Preview mode enabled - applying server action mocks');
-  console.log('[Explorer] Mock location: __explorer_mocks__/');
-  console.log('[Explorer] Aliases:', Object.entries(turboAliases).map(([k,v]) => k + ' -> ' + v));
+
+  console.log('[Storial] Preview mode enabled - applying server action mocks');
+  console.log('[Storial] Mock location: __storial_mocks__/');
+  console.log('[Storial] Aliases:', Object.entries(turboAliases).map(([k,v]) => k + ' -> ' + v));
   
   return {
     ...config,
@@ -309,7 +309,7 @@ function mergeExplorerConfig(config) {
   };
 }
 
-module.exports = { mergeExplorerConfig, turboAliases, webpackAliases, isPreview };
+module.exports = { mergeStorialConfig, turboAliases, webpackAliases, isPreview };
 `;
 }
 
@@ -322,8 +322,8 @@ function injectNextConfigWithHelper(content: string, configFileName: string): st
   
   // Import statement
   const importStatement = isESM
-    ? `import { mergeExplorerConfig } from './.explorer/next-aliases.js';`
-    : `const { mergeExplorerConfig } = require('./.explorer/next-aliases.js');`;
+    ? `import { mergeStorialConfig } from './.storial/next-aliases.js';`
+    : `const { mergeStorialConfig } = require('./.storial/next-aliases.js');`;
   
   // Add import at the top (after any existing imports)
   const importSection = `${EXPLORER_START_MARKER}
@@ -345,14 +345,14 @@ ${EXPLORER_END_MARKER}
   // Insert import
   let result = content.slice(0, importInsertPos) + '\n' + importSection + content.slice(importInsertPos);
   
-  // Wrap the export with mergeExplorerConfig
+  // Wrap the export with mergeStorialConfig
   // Handle: export default { ... }
   result = result.replace(
     /export\s+default\s+(\{[\s\S]*?\n\}\s*;?)\s*$/,
     (match, configObj) => {
       // Check if already wrapped
-      if (match.includes('mergeExplorerConfig')) return match;
-      return `export default mergeExplorerConfig(${configObj.trim().replace(/;$/, '')});`;
+      if (match.includes('mergeStorialConfig')) return match;
+      return `export default mergeStorialConfig(${configObj.trim().replace(/;$/, '')});`;
     }
   );
   
@@ -360,28 +360,28 @@ ${EXPLORER_END_MARKER}
   result = result.replace(
     /module\.exports\s*=\s*(\{[\s\S]*?\n\}\s*;?)\s*$/,
     (match, configObj) => {
-      if (match.includes('mergeExplorerConfig')) return match;
-      return `module.exports = mergeExplorerConfig(${configObj.trim().replace(/;$/, '')});`;
+      if (match.includes('mergeStorialConfig')) return match;
+      return `module.exports = mergeStorialConfig(${configObj.trim().replace(/;$/, '')});`;
     }
   );
   
   // Handle: const nextConfig = { ... }; export default nextConfig;
   // or: const nextConfig = { ... }; module.exports = nextConfig;
-  if (!result.includes('mergeExplorerConfig(')) {
+  if (!result.includes('mergeStorialConfig(')) {
     // Try to find variable assignment followed by export
     result = result.replace(
       /(export\s+default\s+)(\w+)\s*;?\s*$/,
       (match, exportPart, varName) => {
-        if (match.includes('mergeExplorerConfig')) return match;
-        return `${exportPart}mergeExplorerConfig(${varName});`;
+        if (match.includes('mergeStorialConfig')) return match;
+        return `${exportPart}mergeStorialConfig(${varName});`;
       }
     );
     
     result = result.replace(
       /(module\.exports\s*=\s*)(\w+)\s*;?\s*$/,
       (match, exportPart, varName) => {
-        if (match.includes('mergeExplorerConfig')) return match;
-        return `${exportPart}mergeExplorerConfig(${varName});`;
+        if (match.includes('mergeStorialConfig')) return match;
+        return `${exportPart}mergeStorialConfig(${varName});`;
       }
     );
   }
@@ -414,7 +414,7 @@ function generateViteAliases(
  * Turbopack resolves these relative to the project root.
  * 
  * Example:
- * - @/components/cart/actions → __explorer_mocks__/components/cart/actions.mock
+ * - @/components/cart/actions → __storial_mocks__/components/cart/actions.mock
  */
 function generateNextAliases(
   projectPath: string,
@@ -425,15 +425,15 @@ function generateNextAliases(
   for (const importPath of Object.entries(mockServerActions)) {
     const [actionPath] = importPath;
     
-    // Mock path relative to project root (will be created at __explorer_mocks__/)
-    // e.g., components/cart/actions → __explorer_mocks__/components/cart/actions.mock
-    const mockRelativePath = `__explorer_mocks__/${actionPath}.mock`;
+    // Mock path relative to project root (will be created at __storial_mocks__/)
+    // e.g., components/cart/actions → __storial_mocks__/components/cart/actions.mock
+    const mockRelativePath = `__storial_mocks__/${actionPath}.mock`;
     
     // For Turbopack: source uses @/ (matching user's imports), 
     // target is bare path resolved from project root
     const sourceWithAt = `@/${actionPath}`;
     
-    // Primary alias: @/components/cart/actions → __explorer_mocks__/components/cart/actions.mock
+    // Primary alias: @/components/cart/actions → __storial_mocks__/components/cart/actions.mock
     aliases[sourceWithAt] = mockRelativePath;
     
     // Also alias bare paths for components that import without @/
@@ -461,7 +461,7 @@ function generateViteAliasCode(aliases: Record<string, string>): string {
 ${EXPLORER_START_MARKER}
 // Conditional aliases for server action mocking (only active during preview)
 // This will NOT affect your normal development or production builds
-...(process.env.EXPLORER_PREVIEW ? {
+...(process.env.STORIAL_PREVIEW ? {
   resolve: {
     alias: {
 ${aliasLines}
@@ -560,12 +560,12 @@ export async function removeBuildConfigInjection(
       if (content.includes(EXPLORER_START_MARKER)) {
         let cleanedContent = removeInjectedCode(content);
         
-        // For Next.js, also remove the mergeExplorerConfig wrapper
+        // For Next.js, also remove the mergeStorialConfig wrapper
         if (isNextJs) {
           cleanedContent = cleanedContent
-            .replace(/mergeExplorerConfig\(([^)]+)\)/g, '$1')
-            .replace(/import \{ mergeExplorerConfig \}[^;]+;?\n?/g, '')
-            .replace(/const \{ mergeExplorerConfig \}[^;]+;?\n?/g, '');
+            .replace(/mergeStorialConfig\(([^)]+)\)/g, '$1')
+            .replace(/import \{ mergeStorialConfig \}[^;]+;?\n?/g, '')
+            .replace(/const \{ mergeStorialConfig \}[^;]+;?\n?/g, '');
         }
         
         await fs.writeFile(fullPath, cleanedContent, 'utf-8');
@@ -581,7 +581,7 @@ export async function removeBuildConfigInjection(
   // Also remove the helper file for Next.js
   if (isNextJs) {
     try {
-      const aliasHelperPath = path.join(projectPath, '.explorer', 'next-aliases.js');
+      const aliasHelperPath = path.join(projectPath, '.storial', 'next-aliases.js');
       await fs.unlink(aliasHelperPath);
       log.success('Removed alias helper file');
     } catch {
@@ -622,8 +622,8 @@ export async function previewBuildConfigChanges(
         .join('\n');
       
       const instructions = isNextJs
-        ? `After setup, restart your dev server with:\n  EXPLORER_PREVIEW=true npm run dev`
-        : `After setup, restart your dev server with:\n  EXPLORER_PREVIEW=true npm run dev`;
+        ? `After setup, restart your dev server with:\n  STORIAL_PREVIEW=true npm run dev`
+        : `After setup, restart your dev server with:\n  STORIAL_PREVIEW=true npm run dev`;
       
       return {
         configFile: file,

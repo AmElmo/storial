@@ -618,7 +618,7 @@ function PreviewTab({
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span>Create: <code className="px-1.5 py-0.5 bg-muted rounded text-xs">.explorer/</code> folder (stories & mocks)</span>
+                    <span>Create: <code className="px-1.5 py-0.5 bg-muted rounded text-xs">.storial/</code> folder (stories & mocks)</span>
                   </div>
                 </div>
               </div>

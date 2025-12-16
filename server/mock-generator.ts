@@ -88,9 +88,9 @@ export async function ${fnName}(...args: any[]): Promise<any> {
 /**
  * Generate mock files from a story's mockServerActions configuration
  * 
- * IMPORTANT: For Next.js with Turbopack, mocks are placed at __explorer_mocks__/
+ * IMPORTANT: For Next.js with Turbopack, mocks are placed at __storial_mocks__/
  * at the project root. This allows them to be resolved via @/ alias:
- * @/components/cart/actions → @/__explorer_mocks__/components/cart/actions.mock
+ * @/components/cart/actions → @/__storial_mocks__/components/cart/actions.mock
  * 
  * The mock file must export ALL functions from the original file, not just
  * the ones specified in mockServerActions. Otherwise, other imports will fail.
@@ -102,13 +102,13 @@ export async function generateMockFiles(
   const created: string[] = [];
   const errors: string[] = [];
   
-  // Use __explorer_mocks__ at project root (covered by @/ alias)
-  const mocksDir = path.join(projectPath, '__explorer_mocks__');
+  // Use __storial_mocks__ at project root (covered by @/ alias)
+  const mocksDir = path.join(projectPath, '__storial_mocks__');
   
   for (const [importPath, functionMocks] of Object.entries(mockServerActions)) {
     try {
       // Convert import path to mock file path
-      // e.g., "components/cart/actions" -> "__explorer_mocks__/components/cart/actions.mock.ts"
+      // e.g., "components/cart/actions" -> "__storial_mocks__/components/cart/actions.mock.ts"
       const cleanPath = importPath
         .replace(/^[@~]\//, '') // Remove @ or ~ prefix
         .replace(/^\.\//, '')   // Remove ./ prefix
@@ -227,7 +227,7 @@ async function scanFileExports(filePath: string): Promise<string[]> {
 
 /**
  * Get the relative path for a mock file based on import path
- * Returns path relative to project root, using __explorer_mocks__/
+ * Returns path relative to project root, using __storial_mocks__/
  */
 export function getMockFilePath(importPath: string): string {
   const cleanPath = importPath
@@ -235,7 +235,7 @@ export function getMockFilePath(importPath: string): string {
     .replace(/^\.\//, '')
     .replace(/\.(ts|tsx|js|jsx)$/, '');
   
-  return `__explorer_mocks__/${cleanPath}.mock`;
+  return `__storial_mocks__/${cleanPath}.mock`;
 }
 
 /**
@@ -264,7 +264,7 @@ export function generateMockAliases(
  * Clean up all generated mock files
  */
 export async function cleanupMockFiles(projectPath: string): Promise<void> {
-  const mocksDir = path.join(projectPath, '__explorer_mocks__');
+  const mocksDir = path.join(projectPath, '__storial_mocks__');
   
   try {
     await fs.rm(mocksDir, { recursive: true, force: true });
@@ -273,8 +273,8 @@ export async function cleanupMockFiles(projectPath: string): Promise<void> {
     log.warn('Failed to clean up mock files', error);
   }
   
-  // Also clean up old .explorer/mocks location if it exists
-  const oldMocksDir = path.join(projectPath, '.explorer', 'mocks');
+  // Also clean up old .storial/mocks location if it exists
+  const oldMocksDir = path.join(projectPath, '.storial', 'mocks');
   try {
     await fs.rm(oldMocksDir, { recursive: true, force: true });
   } catch {
@@ -286,7 +286,7 @@ export async function cleanupMockFiles(projectPath: string): Promise<void> {
  * List all existing mock files in the project
  */
 export async function listMockFiles(projectPath: string): Promise<string[]> {
-  const mocksDir = path.join(projectPath, '__explorer_mocks__');
+  const mocksDir = path.join(projectPath, '__storial_mocks__');
   const mockFiles: string[] = [];
   
   try {

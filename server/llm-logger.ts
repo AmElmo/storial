@@ -2,7 +2,7 @@
  * LLM Logger Module
  * 
  * Handles logging of LLM generation requests for debugging and analysis.
- * Logs are saved to .explorer/llm-logs/ in the project directory.
+ * Logs are saved to .storial/llm-logs/ in the project directory.
  */
 
 import fs from 'fs/promises';
@@ -397,11 +397,11 @@ export function setDuration(logEntry: LLMLogEntry, totalMs: number, llmCallMs: n
 }
 
 /**
- * Save an LLM log entry to the project's .explorer/llm-logs directory
+ * Save an LLM log entry to the project's .storial/llm-logs directory
  * Filename format: {provider}_{model}_{type}_{name}_{timestamp}.json
  */
 export async function saveLLMLog(projectPath: string, logEntry: LLMLogEntry): Promise<string> {
-  const logsDir = path.join(projectPath, '.explorer', 'llm-logs');
+  const logsDir = path.join(projectPath, '.storial', 'llm-logs');
   await fs.mkdir(logsDir, { recursive: true });
   
   // Provider prefix (local or openai)
@@ -435,7 +435,7 @@ export async function saveLLMLog(projectPath: string, logEntry: LLMLogEntry): Pr
  * List all LLM logs in the project (returns last N logs)
  */
 export async function listLLMLogs(projectPath: string, limit: number = 50): Promise<LLMLogSummary[]> {
-  const logsDir = path.join(projectPath, '.explorer', 'llm-logs');
+  const logsDir = path.join(projectPath, '.storial', 'llm-logs');
   const logs: LLMLogSummary[] = [];
   
   try {
@@ -478,7 +478,7 @@ export async function listLLMLogs(projectPath: string, limit: number = 50): Prom
  * Get a specific LLM log by filename
  */
 export async function getLLMLog(projectPath: string, filename: string): Promise<LLMLogEntry | null> {
-  const filePath = path.join(projectPath, '.explorer', 'llm-logs', filename);
+  const filePath = path.join(projectPath, '.storial', 'llm-logs', filename);
   
   try {
     const content = await fs.readFile(filePath, 'utf-8');
@@ -492,7 +492,7 @@ export async function getLLMLog(projectPath: string, filename: string): Promise<
  * Delete old logs (keep last N)
  */
 export async function cleanupOldLogs(projectPath: string, keepCount: number = 100): Promise<number> {
-  const logsDir = path.join(projectPath, '.explorer', 'llm-logs');
+  const logsDir = path.join(projectPath, '.storial', 'llm-logs');
   
   try {
     const files = await fs.readdir(logsDir);

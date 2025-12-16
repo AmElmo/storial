@@ -185,10 +185,10 @@ storial/
 
 ### LLM Settings
 
-Stories are saved in your project's `.explorer/` directory:
+Stories are saved in your project's `.storial/` directory:
 ```
 your-project/
-└── .explorer/
+└── .storial/
     ├── stories/
     │   ├── components/    # Component stories
     │   └── pages/         # Page stories

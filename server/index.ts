@@ -58,7 +58,7 @@ let currentProjectPath: string | null = null;
 let cachedScanResult: any = null;
 
 // ==================== SCAN CACHE ====================
-// Save scan results to .explorer/scan.json for persistence across restarts
+// Save scan results to .storial/scan.json for persistence across restarts
 
 const SCAN_CACHE_FILE = 'scan.json';
 
@@ -69,9 +69,9 @@ interface ScanCacheData {
 }
 
 async function getScanCachePath(projectPath: string): Promise<string> {
-  const explorerDir = path.join(projectPath, '.explorer');
-  await fs.mkdir(explorerDir, { recursive: true });
-  return path.join(explorerDir, SCAN_CACHE_FILE);
+  const storialDir = path.join(projectPath, '.storial');
+  await fs.mkdir(storialDir, { recursive: true });
+  return path.join(storialDir, SCAN_CACHE_FILE);
 }
 
 async function loadScanCache(projectPath: string): Promise<ScanCacheData | null> {
@@ -885,7 +885,7 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
     }
     
     // Save the stories to the correct file
-    const storiesDir = path.join(currentProjectPath, '.explorer', 'stories', type === 'page' ? 'pages' : 'components');
+    const storiesDir = path.join(currentProjectPath, '.storial', 'stories', type === 'page' ? 'pages' : 'components');
     await fs.mkdir(storiesDir, { recursive: true });
     
     // Sanitize filename: replace invalid chars like : / \ with safe alternatives
@@ -911,8 +911,8 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
       provider: llmProvider,
       model: logEntry.response.model,
       stories: storiesJson,
-      filePath: `.explorer/stories/${type === 'page' ? 'pages' : 'components'}/${fileName}`,
-      logFile: logFilePath.replace(currentProjectPath, '.explorer').replace(/.*\.explorer/, '.explorer'),
+      filePath: `.storial/stories/${type === 'page' ? 'pages' : 'components'}/${fileName}`,
+      logFile: logFilePath.replace(currentProjectPath, '.storial').replace(/.*\.storial/, '.storial'),
       stats: {
         provider: llmProvider,
         model: logEntry.response.model,

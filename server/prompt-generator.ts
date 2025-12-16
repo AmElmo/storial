@@ -295,7 +295,7 @@ Example for a static component:
 ## Instructions
 
 Create a stories file that enables previewing this component in different states with mock data.
-The file should be created at: \`.explorer/stories/components/${storiesFileName}\`
+The file should be created at: \`.storial/stories/components/${storiesFileName}\`
 
 **Important:** Look at the template below for the expected JSON structure. Follow it exactly.
 ${staticComponentSection}
@@ -371,7 +371,7 @@ Based on the source code and analysis above:
    - Each significant prop variation
    - Edge cases (long text, missing optional data, etc.)
 `}
-**Create the file:** \`.explorer/stories/components/${storiesFileName}\`
+**Create the file:** \`.storial/stories/components/${storiesFileName}\`
 
 Generate the complete JSON file content now.`;
 }
@@ -447,7 +447,7 @@ Example for a static page:
 ## Instructions
 
 Create a stories file that enables previewing this page in different states with mock data.
-The file should be created at: \`.explorer/stories/pages/${storiesFileName}\`
+The file should be created at: \`.storial/stories/pages/${storiesFileName}\`
 
 **Important:** Look at the template below for the expected JSON structure. Follow it exactly.
 ${staticPageSection}
@@ -520,7 +520,7 @@ Based on the source code and analysis above:
    - Different user roles (if role-based content exists)
    - Edge cases
 `}
-**Create the file:** \`.explorer/stories/pages/${storiesFileName}\`
+**Create the file:** \`.storial/stories/pages/${storiesFileName}\`
 
 Generate the complete JSON file content now.`;
 }
@@ -528,9 +528,9 @@ Generate the complete JSON file content now.`;
 // ==================== TEMPLATE SETUP ====================
 
 export async function ensureTemplatesExist(projectPath: string): Promise<{ created: boolean; path: string }> {
-  const explorerPath = path.join(projectPath, '.explorer');
-  const templatesPath = path.join(explorerPath, 'templates');
-  const storiesPath = path.join(explorerPath, 'stories');
+  const storialPath = path.join(projectPath, '.storial');
+  const templatesPath = path.join(storialPath, 'templates');
+  const storiesPath = path.join(storialPath, 'stories');
   const componentsStoriesPath = path.join(storiesPath, 'components');
   const pagesStoriesPath = path.join(storiesPath, 'pages');
   
@@ -549,16 +549,16 @@ export async function ensureTemplatesExist(projectPath: string): Promise<{ creat
     await fs.writeFile(componentTemplatePath, COMPONENT_STORY_TEMPLATE, 'utf-8');
     await fs.writeFile(pageTemplatePath, PAGE_STORY_TEMPLATE, 'utf-8');
     
-    // Create a README in .explorer
-    const readmePath = path.join(explorerPath, 'README.md');
-    const readmeContent = `# Explorer Stories
+    // Create a README in .storial
+    const readmePath = path.join(storialPath, 'README.md');
+    const readmeContent = `# Storial Stories
 
 This folder contains story files generated for previewing components and pages.
 
 ## Structure
 
 \`\`\`
-.explorer/
+.storial/
 ├── templates/                    # Template files for reference
 │   ├── component.stories.template.json
 │   └── page.stories.template.json
@@ -572,7 +572,7 @@ This folder contains story files generated for previewing components and pages.
 
 ## How It Works
 
-1. **Generate Stories**: Click "Generate Stories" in the Explorer to get an AI prompt
+1. **Generate Stories**: Click "Generate Stories" in Storial to get an AI prompt
 2. **Run AI**: Paste the prompt into your AI coding tool (Cursor, Claude, etc.)
 3. **AI Creates File**: The AI will create the story file in the correct location
 4. **Preview**: Select a story to preview the component/page with mock data
@@ -591,7 +591,7 @@ See the template files for the full schema.
     await fs.writeFile(readmePath, readmeContent, 'utf-8');
     
     log.success('Templates created', { path: templatesPath });
-    return { created: true, path: explorerPath };
+    return { created: true, path: storialPath };
   } catch (error) {
     log.error('Failed to create templates', error);
     throw error;
@@ -642,7 +642,7 @@ export async function getStories(
   name: string
 ): Promise<StoryFile | null> {
   const folder = type === 'component' ? 'components' : 'pages';
-  const storiesDir = path.join(projectPath, '.explorer', 'stories', folder);
+  const storiesDir = path.join(projectPath, '.storial', 'stories', folder);
   
   // Try 1: Direct filename match
   const safeName = sanitizeFileName(name);
@@ -704,8 +704,8 @@ export async function listAllStories(projectPath: string): Promise<{
   const result = { components: [] as string[], pages: [] as string[] };
   
   try {
-    const componentsPath = path.join(projectPath, '.explorer', 'stories', 'components');
-    const pagesPath = path.join(projectPath, '.explorer', 'stories', 'pages');
+    const componentsPath = path.join(projectPath, '.storial', 'stories', 'components');
+    const pagesPath = path.join(projectPath, '.storial', 'stories', 'pages');
     
     try {
       const componentFiles = await fs.readdir(componentsPath);
