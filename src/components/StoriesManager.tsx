@@ -9,7 +9,11 @@ import {
   RefreshCw,
   ChevronLeft,
   Filter,
-  Loader2
+  Loader2,
+  Minimize2,
+  Maximize2,
+  X,
+  AlertCircle
 } from 'lucide-react';
 import {
   getScanOverview,
@@ -32,11 +36,19 @@ interface GeneratingItem {
   name: string;
 }
 
+type ItemStatus = 'pending' | 'processing' | 'success' | 'error';
+
+interface ItemProgress {
+  item: GeneratingItem;
+  status: ItemStatus;
+  error?: string;
+}
+
 interface GenerationProgress {
   current: number;
   total: number;
   currentItem: GeneratingItem | null;
-  results: Array<{ item: GeneratingItem; success: boolean; error?: string }>;
+  items: ItemProgress[];
 }
 
 export function StoriesManager({ onBack }: StoriesManagerProps) {
@@ -48,6 +60,7 @@ export function StoriesManager({ onBack }: StoriesManagerProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
+  const [isProgressMinimized, setIsProgressMinimized] = useState(false);
 
   // Provider selection state
   const [showProviderModal, setShowProviderModal] = useState(false);
@@ -160,22 +173,32 @@ export function StoriesManager({ onBack }: StoriesManagerProps) {
     setShowProviderModal(false);
     setGenerationError(null);
     setGenerating(true);
+    setIsProgressMinimized(false);
+
+    // Initialize all items as pending
+    const initialItems: ItemProgress[] = pendingGeneration.map(item => ({
+      item,
+      status: 'pending' as ItemStatus
+    }));
+
     setProgress({
       current: 0,
       total: pendingGeneration.length,
       currentItem: null,
-      results: []
+      items: initialItems
     });
-
-    const results: GenerationProgress['results'] = [];
 
     for (let i = 0; i < pendingGeneration.length; i++) {
       const item = pendingGeneration[i];
 
+      // Mark current item as processing
       setProgress(prev => prev ? {
         ...prev,
         current: i,
-        currentItem: item
+        currentItem: item,
+        items: prev.items.map((p, idx) =>
+          idx === i ? { ...p, status: 'processing' as ItemStatus } : p
+        )
       } : null);
 
       try {
@@ -201,26 +224,37 @@ export function StoriesManager({ onBack }: StoriesManagerProps) {
           return;
         }
 
-        results.push({
-          item,
-          success: result.success,
-          error: result.error || result.message
-        });
+        // Update item status
+        setProgress(prev => prev ? {
+          ...prev,
+          items: prev.items.map((p, idx) =>
+            idx === i ? {
+              ...p,
+              status: result.success ? 'success' as ItemStatus : 'error' as ItemStatus,
+              error: result.success ? undefined : (result.error || result.message)
+            } : p
+          )
+        } : null);
       } catch (err) {
-        results.push({
-          item,
-          success: false,
-          error: err instanceof Error ? err.message : 'Unknown error'
-        });
+        setProgress(prev => prev ? {
+          ...prev,
+          items: prev.items.map((p, idx) =>
+            idx === i ? {
+              ...p,
+              status: 'error' as ItemStatus,
+              error: err instanceof Error ? err.message : 'Unknown error'
+            } : p
+          )
+        } : null);
       }
     }
 
-    setProgress({
+    // Mark generation complete
+    setProgress(prev => prev ? {
+      ...prev,
       current: pendingGeneration.length,
-      total: pendingGeneration.length,
-      currentItem: null,
-      results
-    });
+      currentItem: null
+    } : null);
 
     // Clear selection and reload data
     setSelectedItems(new Set());
@@ -709,26 +743,133 @@ export function StoriesManager({ onBack }: StoriesManagerProps) {
         </div>
       )}
 
-      {/* Progress Modal */}
-      {generating && progress && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border rounded-xl p-6 w-full max-w-md mx-4 text-center">
-            <h3 className="text-lg font-semibold mb-2">Generating Stories</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {progress.currentItem
-                ? `Processing: ${progress.currentItem.name}`
-                : 'Preparing...'}
-            </p>
-            <div className="h-2 bg-muted rounded-full overflow-hidden mb-4">
+      {/* Progress Modal - Expanded */}
+      {generating && progress && !isProgressMinimized && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-card border rounded-xl w-full max-w-lg mx-4 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Generating Stories</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {progress.items.filter(i => i.status === 'success').length} of {progress.total} completed
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsProgressMinimized(true)}
+                className="p-1.5 hover:bg-muted rounded-lg transition-colors"
+                title="Minimize"
+              >
+                <Minimize2 className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Progress bar */}
+            <div className="px-5 py-3 bg-muted/20">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${((progress.items.filter(i => i.status === 'success' || i.status === 'error').length) / progress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Items list */}
+            <div className="max-h-64 overflow-y-auto">
+              {progress.items.map((item, idx) => (
+                <div
+                  key={`${item.item.type}:${item.item.name}`}
+                  className={`flex items-center gap-3 px-5 py-3 border-b last:border-b-0 transition-all duration-300 ${
+                    item.status === 'processing' ? 'bg-primary/5' : ''
+                  }`}
+                >
+                  {/* Status icon */}
+                  <div className="flex-shrink-0">
+                    {item.status === 'pending' && (
+                      <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
+                    )}
+                    {item.status === 'processing' && (
+                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    )}
+                    {item.status === 'success' && (
+                      <CheckCircle2 className="w-5 h-5 text-green-500 animate-in zoom-in duration-200" />
+                    )}
+                    {item.status === 'error' && (
+                      <XCircle className="w-5 h-5 text-red-500 animate-in zoom-in duration-200" />
+                    )}
+                  </div>
+
+                  {/* Item info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        item.item.type === 'page'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                      }`}>
+                        {item.item.type}
+                      </span>
+                      <span className="font-mono text-sm truncate">{item.item.name}</span>
+                    </div>
+                    {item.error && (
+                      <p className="text-xs text-red-500 mt-1 truncate">{item.error}</p>
+                    )}
+                  </div>
+
+                  {/* Status text */}
+                  <span className={`text-xs flex-shrink-0 ${
+                    item.status === 'processing' ? 'text-primary' :
+                    item.status === 'success' ? 'text-green-600 dark:text-green-400' :
+                    item.status === 'error' ? 'text-red-600 dark:text-red-400' :
+                    'text-muted-foreground'
+                  }`}>
+                    {item.status === 'pending' && 'Waiting'}
+                    {item.status === 'processing' && 'Generating...'}
+                    {item.status === 'success' && 'Done'}
+                    {item.status === 'error' && 'Failed'}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 bg-muted/30 border-t">
+              <p className="text-xs text-muted-foreground text-center">
+                {progress.currentItem
+                  ? `Currently processing: ${progress.currentItem.name}`
+                  : progress.items.every(i => i.status === 'success' || i.status === 'error')
+                    ? 'Generation complete!'
+                    : 'Preparing...'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Progress Indicator - Minimized (floating) */}
+      {generating && progress && isProgressMinimized && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-200">
+          <button
+            onClick={() => setIsProgressMinimized(false)}
+            className="flex items-center gap-3 bg-card border rounded-full pl-4 pr-3 py-2 shadow-lg hover:shadow-xl transition-all group"
+          >
+            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+            <span className="text-sm font-medium">
+              {progress.items.filter(i => i.status === 'success').length}/{progress.total}
+            </span>
+            <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary rounded-full transition-all duration-300"
-                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                className="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-500"
+                style={{ width: `${((progress.items.filter(i => i.status === 'success' || i.status === 'error').length) / progress.total) * 100}%` }}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {progress.current} / {progress.total}
-            </p>
-          </div>
+            <Maximize2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
         </div>
       )}
 

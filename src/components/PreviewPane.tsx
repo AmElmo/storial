@@ -573,7 +573,7 @@ function PreviewTab({
       params.set('component', item.item.name);
     }
     if (storyId) params.set('story', storyId);
-    return `http://localhost:${devServerPort}/__preview?${params.toString()}`;
+    return `http://localhost:${devServerPort}/storial-preview?${params.toString()}`;
   };
 
   // ==================== SETUP MODAL FOR SERVER ACTIONS ====================

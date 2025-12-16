@@ -315,13 +315,36 @@ export class StoriesPanel {
     const providerSelection = await this._selectProvider();
     if (!providerSelection) return;
 
+    const item = { type, name };
+
     this._panel.webview.postMessage({
       command: 'generatingStart',
-      items: [{ type, name }]
+      items: [item],
+      total: 1
+    });
+
+    // Mark as processing
+    this._panel.webview.postMessage({
+      command: 'generatingProgress',
+      current: 1,
+      total: 1,
+      currentItem: item
     });
 
     try {
       const result = await this._apiClient.generateStory(type, name, providerSelection.provider as any);
+
+      // Send result
+      this._panel.webview.postMessage({
+        command: 'generatingProgress',
+        current: 1,
+        total: 1,
+        currentItem: item,
+        result: {
+          success: result.success,
+          error: result.success ? undefined : (result.error || result.message)
+        }
+      });
 
       if (result.success) {
         vscode.window.showInformationMessage(
@@ -335,6 +358,19 @@ export class StoriesPanel {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Send error result
+      this._panel.webview.postMessage({
+        command: 'generatingProgress',
+        current: 1,
+        total: 1,
+        currentItem: item,
+        result: {
+          success: false,
+          error: errorMessage
+        }
+      });
+
       await this._handleGenerationError(errorMessage, providerSelection.provider);
     }
 
@@ -361,6 +397,7 @@ export class StoriesPanel {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
 
+      // Send progress update - item is now processing
       this._panel.webview.postMessage({
         command: 'generatingProgress',
         current: i + 1,
@@ -374,6 +411,18 @@ export class StoriesPanel {
           item.name,
           providerSelection.provider as any
         );
+
+        // Send result update for this item
+        this._panel.webview.postMessage({
+          command: 'generatingProgress',
+          current: i + 1,
+          total: items.length,
+          currentItem: item,
+          result: {
+            success: result.success,
+            error: result.success ? undefined : (result.error || result.message)
+          }
+        });
 
         if (result.success) {
           successCount++;
@@ -389,6 +438,19 @@ export class StoriesPanel {
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+
+        // Send error result for this item
+        this._panel.webview.postMessage({
+          command: 'generatingProgress',
+          current: i + 1,
+          total: items.length,
+          currentItem: item,
+          result: {
+            success: false,
+            error: errorMsg
+          }
+        });
+
         if (this._isApiKeyError(errorMsg)) {
           apiKeyError = true;
           await this._handleGenerationError(errorMsg, providerSelection.provider);
@@ -762,45 +824,311 @@ export class StoriesPanel {
       align-items: center;
       justify-content: center;
       z-index: 100;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     .progress-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 32px;
-      min-width: 400px;
-      text-align: center;
+      min-width: 480px;
+      max-width: 520px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.2s ease;
     }
 
-    .progress-title {
-      font-size: 18px;
+    .progress-card.minimized {
+      display: none;
+    }
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.1);
+    }
+
+    .progress-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(var(--accent-rgb, 75, 85, 99), 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-icon svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .progress-header-info h3 {
+      font-size: 15px;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin: 0;
     }
 
-    .progress-subtitle {
+    .progress-header-info p {
+      font-size: 12px;
       color: var(--muted);
-      margin-bottom: 24px;
+      margin: 2px 0 0 0;
+    }
+
+    .progress-minimize-btn {
+      padding: 6px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .progress-minimize-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--fg);
+    }
+
+    .progress-bar-section {
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.05);
     }
 
     .progress-bar-container {
-      height: 8px;
+      height: 6px;
       background: var(--border);
-      border-radius: 4px;
+      border-radius: 3px;
       overflow: hidden;
-      margin-bottom: 16px;
     }
 
     .progress-bar-fill {
       height: 100%;
-      background: var(--accent);
-      border-radius: 4px;
-      transition: width 0.3s ease;
+      background: linear-gradient(90deg, var(--accent), #8b5cf6);
+      border-radius: 3px;
+      transition: width 0.5s ease;
     }
 
-    .progress-status {
-      font-size: 14px;
+    .progress-items-list {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .progress-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+
+    .progress-item:last-child {
+      border-bottom: none;
+    }
+
+    .progress-item.processing {
+      background: rgba(var(--accent-rgb, 75, 85, 99), 0.05);
+    }
+
+    .progress-item-status {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-item-status.pending {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+    }
+
+    .progress-item-status.processing svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+
+    .progress-item-status.success svg {
+      width: 18px;
+      height: 18px;
+      color: var(--success);
+      animation: scaleIn 0.2s ease;
+    }
+
+    .progress-item-status.error svg {
+      width: 18px;
+      height: 18px;
+      color: #ef4444;
+      animation: scaleIn 0.2s ease;
+    }
+
+    .progress-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .progress-item-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-item-type {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .progress-item-type.page {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    .progress-item-type.component {
+      background: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
+    }
+
+    .progress-item-name span {
+      font-family: var(--vscode-editor-font-family);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .progress-item-error {
+      font-size: 11px;
+      color: #f87171;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .progress-item-status-text {
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .progress-item-status-text.pending { color: var(--muted); }
+    .progress-item-status-text.processing { color: var(--accent); }
+    .progress-item-status-text.success { color: var(--success); }
+    .progress-item-status-text.error { color: #f87171; }
+
+    .progress-footer {
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.1);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .progress-footer p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* Minimized floating indicator */
+    .progress-minimized {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 101;
+      animation: slideUp 0.2s ease;
+    }
+
+    .progress-minimized-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px 8px 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      transition: all 0.15s;
+    }
+
+    .progress-minimized-btn:hover {
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .progress-minimized-spinner {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+
+    .progress-minimized-count {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .progress-minimized-bar {
+      width: 48px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-minimized-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #8b5cf6);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .progress-minimized-expand {
+      width: 16px;
+      height: 16px;
       color: var(--muted);
     }
 
@@ -977,15 +1305,61 @@ export class StoriesPanel {
     </div>
   </div>
 
+  <!-- Progress Modal - Expanded -->
   <div id="progress-overlay" class="progress-overlay hidden">
-    <div class="progress-card">
-      <div class="progress-title">Generating Stories</div>
-      <div class="progress-subtitle" id="progress-subtitle">Preparing...</div>
-      <div class="progress-bar-container">
-        <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+    <div class="progress-card" id="progress-card">
+      <div class="progress-header">
+        <div class="progress-header-left">
+          <div class="progress-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z"/>
+            </svg>
+          </div>
+          <div class="progress-header-info">
+            <h3>Generating Stories</h3>
+            <p id="progress-count">0 of 0 completed</p>
+          </div>
+        </div>
+        <button class="progress-minimize-btn" onclick="minimizeProgress()" title="Minimize">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 14 10 14 10 20"></polyline>
+            <polyline points="20 10 14 10 14 4"></polyline>
+            <line x1="14" y1="10" x2="21" y2="3"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
       </div>
-      <div class="progress-status" id="progress-status">0 / 0</div>
+      <div class="progress-bar-section">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="progress-items-list" id="progress-items-list">
+        <!-- Items will be rendered here -->
+      </div>
+      <div class="progress-footer">
+        <p id="progress-status">Preparing...</p>
+      </div>
     </div>
+  </div>
+
+  <!-- Progress Indicator - Minimized (floating) -->
+  <div id="progress-minimized" class="progress-minimized hidden">
+    <button class="progress-minimized-btn" onclick="maximizeProgress()">
+      <svg class="progress-minimized-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      <span class="progress-minimized-count" id="progress-minimized-count">0/0</span>
+      <div class="progress-minimized-bar">
+        <div class="progress-minimized-bar-fill" id="progress-minimized-fill" style="width: 0%"></div>
+      </div>
+      <svg class="progress-minimized-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+    </button>
   </div>
 
   <script>
@@ -995,6 +1369,8 @@ export class StoriesPanel {
     let currentTab = 'components';
     let selectedItems = { pages: new Set(), components: new Set() };
     let filterMissing = false;
+    let progressItems = [];
+    let isProgressMinimized = false;
 
     // Listen for messages from extension
     window.addEventListener('message', event => {
@@ -1009,10 +1385,10 @@ export class StoriesPanel {
           showError(message.error);
           break;
         case 'generatingStart':
-          showProgress(message.items?.length || 0);
+          showProgress(message.items || [], message.total || message.items?.length || 0);
           break;
         case 'generatingProgress':
-          updateProgress(message.current, message.total, message.currentItem);
+          updateProgress(message.current, message.total, message.currentItem, message.result);
           break;
         case 'generatingEnd':
           hideProgress();
@@ -1203,23 +1579,110 @@ export class StoriesPanel {
       vscode.postMessage({ command: 'generateAllMissing', itemType });
     }
 
-    function showProgress(total) {
+    function showProgress(items, total) {
+      // Initialize progress items with pending status
+      progressItems = items.map(item => ({
+        ...item,
+        status: 'pending',
+        error: null
+      }));
+      isProgressMinimized = false;
+
       document.getElementById('progress-overlay').classList.remove('hidden');
+      document.getElementById('progress-minimized').classList.add('hidden');
       document.getElementById('progress-fill').style.width = '0%';
-      document.getElementById('progress-status').textContent = \`0 / \${total}\`;
-      document.getElementById('progress-subtitle').textContent = 'Starting...';
+      document.getElementById('progress-minimized-fill').style.width = '0%';
+      document.getElementById('progress-count').textContent = \`0 of \${total} completed\`;
+      document.getElementById('progress-minimized-count').textContent = \`0/\${total}\`;
+      document.getElementById('progress-status').textContent = 'Starting...';
+
+      renderProgressItems();
     }
 
-    function updateProgress(current, total, item) {
-      const percent = Math.round((current / total) * 100);
+    function updateProgress(current, total, currentItem, result) {
+      // Update the current item status
+      if (currentItem) {
+        const idx = progressItems.findIndex(
+          p => p.type === currentItem.type && p.name === currentItem.name
+        );
+        if (idx !== -1) {
+          if (result) {
+            // Result received - update status
+            progressItems[idx].status = result.success ? 'success' : 'error';
+            progressItems[idx].error = result.error;
+          } else {
+            // Currently processing
+            progressItems[idx].status = 'processing';
+          }
+        }
+      }
+
+      const completed = progressItems.filter(p => p.status === 'success' || p.status === 'error').length;
+      const percent = Math.round((completed / total) * 100);
+
       document.getElementById('progress-fill').style.width = \`\${percent}%\`;
-      document.getElementById('progress-status').textContent = \`\${current} / \${total}\`;
-      document.getElementById('progress-subtitle').textContent =
-        \`Generating: \${item?.name || 'Unknown'}\`;
+      document.getElementById('progress-minimized-fill').style.width = \`\${percent}%\`;
+      document.getElementById('progress-count').textContent = \`\${completed} of \${total} completed\`;
+      document.getElementById('progress-minimized-count').textContent = \`\${completed}/\${total}\`;
+      document.getElementById('progress-status').textContent = currentItem
+        ? \`Currently processing: \${currentItem.name}\`
+        : completed === total
+          ? 'Generation complete!'
+          : 'Processing...';
+
+      renderProgressItems();
+    }
+
+    function renderProgressItems() {
+      const container = document.getElementById('progress-items-list');
+      container.innerHTML = progressItems.map(item => \`
+        <div class="progress-item \${item.status === 'processing' ? 'processing' : ''}">
+          <div class="progress-item-status \${item.status}">
+            \${item.status === 'pending' ? '' :
+              item.status === 'processing' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>' :
+              item.status === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' :
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+            }
+          </div>
+          <div class="progress-item-info">
+            <div class="progress-item-name">
+              <span class="progress-item-type \${item.type}">\${item.type}</span>
+              <span>\${item.name}</span>
+            </div>
+            \${item.error ? \`<div class="progress-item-error">\${item.error}</div>\` : ''}
+          </div>
+          <span class="progress-item-status-text \${item.status}">
+            \${item.status === 'pending' ? 'Waiting' :
+              item.status === 'processing' ? 'Generating...' :
+              item.status === 'success' ? 'Done' : 'Failed'}
+          </span>
+        </div>
+      \`).join('');
+
+      // Auto-scroll to show the current processing item
+      const processingItem = container.querySelector('.progress-item.processing');
+      if (processingItem) {
+        processingItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function minimizeProgress() {
+      isProgressMinimized = true;
+      document.getElementById('progress-overlay').classList.add('hidden');
+      document.getElementById('progress-minimized').classList.remove('hidden');
+    }
+
+    function maximizeProgress() {
+      isProgressMinimized = false;
+      document.getElementById('progress-overlay').classList.remove('hidden');
+      document.getElementById('progress-minimized').classList.add('hidden');
     }
 
     function hideProgress() {
       document.getElementById('progress-overlay').classList.add('hidden');
+      document.getElementById('progress-minimized').classList.add('hidden');
+      progressItems = [];
+      isProgressMinimized = false;
       // Clear selections after bulk operation
       selectedItems.pages.clear();
       selectedItems.components.clear();

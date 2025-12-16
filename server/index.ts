@@ -507,16 +507,18 @@ const LLM_DEFAULT_URL = 'http://localhost:1234/v1/chat/completions';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_MODEL = 'gpt-4o-mini'; // Cheaper and effective model for this task
 // API key loaded from target project's .env file
+// Supports both STORIAL_OPENAI_API_KEY (preferred) and OPENAI_API_KEY (fallback)
 function getOpenAIKey(): string {
-  return process.env.OPENAI_API_KEY || '';
+  return process.env.STORIAL_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '';
 }
 
 // OpenRouter API settings
 // Get your API key from https://openrouter.ai/keys
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 // API key loaded from target project's .env file
+// Supports both STORIAL_OPENROUTER_API_KEY (preferred) and OPENROUTER_API_KEY (fallback)
 function getOpenRouterKey(): string {
-  return process.env.OPENROUTER_API_KEY || '';
+  return process.env.STORIAL_OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || '';
 }
 
 interface LLMSettings {
@@ -734,7 +736,7 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
           success: false,
           message: 'OpenAI API key not configured',
           error: 'Please add OPENAI_API_KEY to your project\'s .env file',
-          hint: 'Create a .env file in your project root and add: OPENAI_API_KEY=your-key-here'
+          hint: 'Create a .env file in your project root and add: STORIAL_OPENAI_API_KEY=your-key-here (or OPENAI_API_KEY=your-key-here)'
         });
       }
       headers['Authorization'] = `Bearer ${openaiKey}`;
@@ -746,7 +748,7 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
           success: false,
           message: 'OpenRouter API key not configured',
           error: 'Please add OPENROUTER_API_KEY to your project\'s .env file',
-          hint: 'Create a .env file in your project root and add: OPENROUTER_API_KEY=your-key-here'
+          hint: 'Create a .env file in your project root and add: STORIAL_OPENROUTER_API_KEY=your-key-here (or OPENROUTER_API_KEY=your-key-here)'
         });
       }
       headers['Authorization'] = `Bearer ${openrouterKey}`;
