@@ -4,19 +4,20 @@ import { StructureView } from './components/StructureView';
 import { PreviewPane } from './components/PreviewPane';
 import { ProjectSelector } from './components/ProjectSelector';
 import { ScanOverview, type ScanOverviewData } from './components/ScanOverview';
-import { 
-  scanProject, 
-  getProjectInfo, 
+import { StoriesManager } from './components/StoriesManager';
+import {
+  scanProject,
+  getProjectInfo,
   getScanOverview,
-  type ScanResult, 
+  type ScanResult,
   type ScanResultWithCache,
-  type PageInfo, 
+  type PageInfo,
   type ComponentInfo,
   type HookInfo,
   type ContextInfo,
   type UtilityInfo
 } from './lib/api';
-import { Layers, LayoutGrid, FolderOpen, Anchor, Share2, Wrench, AlertTriangle, BarChart3, RefreshCw } from 'lucide-react';
+import { Layers, LayoutGrid, FolderOpen, Anchor, Share2, Wrench, AlertTriangle, BarChart3, RefreshCw, BookOpen } from 'lucide-react';
 
 // Client-side logging
 const log = {
@@ -62,6 +63,7 @@ export default function App() {
   const [showOverview, setShowOverview] = useState(false);
   const [overviewData, setOverviewData] = useState<ScanOverviewData | null>(null);
   const [loadingOverview, setLoadingOverview] = useState(false);
+  const [showStoriesManager, setShowStoriesManager] = useState(false);
 
   log.ui('App render', { 
     projectPath, 
@@ -333,6 +335,17 @@ export default function App() {
               </span>
             )}
             <button
+              onClick={() => {
+                setShowStoriesManager(true);
+                setShowOverview(false);
+              }}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              title="Manage stories"
+            >
+              <BookOpen className="w-4 h-4" />
+              Stories
+            </button>
+            <button
               onClick={handleShowOverview}
               disabled={loadingOverview}
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -452,11 +465,17 @@ export default function App() {
 
         {/* Main content area */}
         <div className="flex-1 flex overflow-hidden">
-          {showOverview && overviewData ? (
+          {showStoriesManager ? (
             <div className="flex-1 overflow-auto">
-              <ScanOverview 
-                data={overviewData} 
-                onClose={() => setShowOverview(false)} 
+              <StoriesManager
+                onBack={() => setShowStoriesManager(false)}
+              />
+            </div>
+          ) : showOverview && overviewData ? (
+            <div className="flex-1 overflow-auto">
+              <ScanOverview
+                data={overviewData}
+                onClose={() => setShowOverview(false)}
               />
             </div>
           ) : selectedItem ? (

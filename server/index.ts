@@ -777,7 +777,8 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
       const hints: Record<LLMProvider, string> = {
         local: 'Make sure LM Studio is running with the local server enabled',
         openai: 'Check your OpenAI API key and billing status',
-        openrouter: 'Check your OpenRouter API key and account balance at openrouter.ai'
+        openrouter: 'Check your OpenRouter API key and account balance at openrouter.ai',
+        'storial-cloud': 'Storial Cloud is coming soon'
       };
       
       return res.status(502).json({ 
@@ -914,7 +915,8 @@ app.post('/api/stories/generate-with-llm', async (req, res) => {
       const hints: Record<LLMProvider, string> = {
         local: 'Make sure LM Studio is running with the local server enabled (default: http://localhost:1234)',
         openai: 'Check your internet connection and OpenAI API status',
-        openrouter: 'Check your internet connection and OpenRouter API status at openrouter.ai'
+        openrouter: 'Check your internet connection and OpenRouter API status at openrouter.ai',
+        'storial-cloud': 'Storial Cloud is coming soon'
       };
       
       return res.status(503).json({ 

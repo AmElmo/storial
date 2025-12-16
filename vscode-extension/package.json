@@ -45,6 +45,12 @@
     },
     "commands": [
       {
+        "command": "storial.openStoriesManager",
+        "title": "Stories Manager",
+        "icon": "$(book)",
+        "category": "Storial"
+      },
+      {
         "command": "storial.refresh",
         "title": "Refresh",
         "icon": "$(refresh)",
@@ -88,14 +94,19 @@
     "menus": {
       "view/title": [
         {
-          "command": "storial.refresh",
+          "command": "storial.openStoriesManager",
           "when": "view == storialExplorer",
           "group": "navigation@1"
         },
         {
-          "command": "storial.openInBrowser",
+          "command": "storial.refresh",
           "when": "view == storialExplorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "storial.openInBrowser",
+          "when": "view == storialExplorer",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [

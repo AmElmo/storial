@@ -7,5 +7,11 @@ export declare class ApiClient {
     scan(forceRescan?: boolean): Promise<ScanResult>;
     getOverview(): Promise<ScanOverviewData | null>;
     generateStory(type: 'component' | 'page', name: string, provider?: LLMProvider): Promise<LLMGenerateResult>;
+    updateLLMSettings(settings: {
+        url?: string;
+        model?: string;
+        temperature?: number;
+        maxTokens?: number;
+    }): Promise<void>;
 }
 //# sourceMappingURL=apiClient.d.ts.map

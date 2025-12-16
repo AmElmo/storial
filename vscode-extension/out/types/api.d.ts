@@ -109,6 +109,24 @@ export interface ScanOverviewData {
         totalPageStories: number;
         totalComponentStories: number;
     };
+    details?: {
+        pages: Array<{
+            route: string;
+            fileName: string;
+            isLayout: boolean;
+            isLoading: boolean;
+            isError: boolean;
+            hasStories: boolean;
+        }>;
+        components: Array<{
+            name: string;
+            fileName: string;
+            isClientComponent: boolean;
+            hasStories: boolean;
+            usedInPages: number;
+            usedInComponents: number;
+        }>;
+    };
 }
 export type LLMProvider = 'local' | 'openai' | 'openrouter' | 'storial-cloud';
 export interface LLMGenerateResult {

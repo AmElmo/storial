@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerCommands = registerCommands;
 const vscode = __importStar(require("vscode"));
+const storiesPanel_1 = require("../webview/storiesPanel");
 const treeItems_1 = require("../providers/treeItems");
 // Helper to extract file path from various tree item types
 function getFilePathFromItem(item) {
@@ -59,6 +60,18 @@ function getFilePathFromItem(item) {
     return undefined;
 }
 function registerCommands(context, treeProvider, serverManager, statusBarManager, treeView) {
+    // Open Stories Manager panel
+    context.subscriptions.push(vscode.commands.registerCommand('storial.openStoriesManager', async () => {
+        const running = await serverManager.isServerRunning();
+        if (!running) {
+            const started = await serverManager.promptToStartServer();
+            if (!started) {
+                vscode.window.showWarningMessage('Server must be running to use Stories Manager');
+                return;
+            }
+        }
+        storiesPanel_1.StoriesPanel.createOrShow(context.extensionUri, serverManager.getApiClient());
+    }));
     // Track clicks for double-click detection
     let lastClickTime = 0;
     let lastClickedItem;

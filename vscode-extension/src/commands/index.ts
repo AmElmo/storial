@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ExplorerTreeProvider } from '../providers/explorerTreeProvider';
 import { ServerManager } from '../server/serverManager';
 import { StatusBarManager } from '../statusBar/statusBarManager';
+import { StoriesPanel } from '../webview/storiesPanel';
 import {
   ComponentTreeItem,
   PageTreeItem,
@@ -40,6 +41,21 @@ export function registerCommands(
   statusBarManager: StatusBarManager,
   treeView: vscode.TreeView<vscode.TreeItem>
 ): void {
+
+  // Open Stories Manager panel
+  context.subscriptions.push(
+    vscode.commands.registerCommand('storial.openStoriesManager', async () => {
+      const running = await serverManager.isServerRunning();
+      if (!running) {
+        const started = await serverManager.promptToStartServer();
+        if (!started) {
+          vscode.window.showWarningMessage('Server must be running to use Stories Manager');
+          return;
+        }
+      }
+      StoriesPanel.createOrShow(context.extensionUri, serverManager.getApiClient());
+    })
+  );
 
   // Track clicks for double-click detection
   let lastClickTime = 0;

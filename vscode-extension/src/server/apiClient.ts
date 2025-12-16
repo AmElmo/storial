@@ -85,4 +85,17 @@ export class ApiClient {
 
     return (await response.json()) as LLMGenerateResult;
   }
+
+  async updateLLMSettings(settings: { url?: string; model?: string; temperature?: number; maxTokens?: number }): Promise<void> {
+    const response = await fetch(`${API_BASE}/llm/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+
+    if (!response.ok) {
+      const error = (await response.json()) as ApiError;
+      throw new Error(error.message || 'Failed to update LLM settings');
+    }
+  }
 }
