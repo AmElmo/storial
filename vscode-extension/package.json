@@ -2,7 +2,7 @@
   "name": "storial",
   "displayName": "Storial",
   "description": "AI-powered component stories for React/Next.js - like Storybook, but magical",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "amelmo",
   "icon": "resources/icon.png",
   "repository": {

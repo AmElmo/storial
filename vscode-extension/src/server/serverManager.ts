@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess, execSync } from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 import { ApiClient } from './apiClient';
 
 export class ServerManager {
@@ -33,21 +34,75 @@ export class ServerManager {
     return false;
   }
 
+  /**
+   * Find where storial is installed (global npm, npx, or local)
+   */
+  private findStorialCommand(): { command: string; args: string[]; cwd?: string } | null {
+    const env = this.getEnvWithPath();
+
+    // Option 1: Check if storial is globally installed
+    try {
+      const globalPath = execSync('npm root -g', { encoding: 'utf-8', env }).trim();
+      const storialGlobalPath = path.join(globalPath, 'storial');
+      if (fs.existsSync(storialGlobalPath)) {
+        this.outputChannel.appendLine(`Found global storial at: ${storialGlobalPath}`);
+        return { command: 'storial', args: ['server'] };
+      }
+    } catch {
+      // Global not found, continue
+    }
+
+    // Option 2: Check if storial is in node_modules of the project
+    const localStorialPath = path.join(this.projectPath, 'node_modules', '.bin', 'storial');
+    if (fs.existsSync(localStorialPath)) {
+      this.outputChannel.appendLine(`Found local storial at: ${localStorialPath}`);
+      return { command: localStorialPath, args: ['server'] };
+    }
+
+    // Option 3: Use npx (always available if npm is installed)
+    this.outputChannel.appendLine('Will use npx to run storial');
+    return { command: 'npx', args: ['storial', 'server'] };
+  }
+
+  private getEnvWithPath(): NodeJS.ProcessEnv {
+    // Ensure common paths are in PATH for finding npm/node
+    const additionalPaths = [
+      '/opt/homebrew/bin',
+      '/usr/local/bin',
+      '/usr/bin',
+      process.env.HOME ? `${process.env.HOME}/.nvm/versions/node/*/bin` : '',
+      process.env.HOME ? `${process.env.HOME}/.npm-global/bin` : ''
+    ].filter(Boolean);
+
+    return {
+      ...process.env,
+      PATH: `${additionalPaths.join(':')}:${process.env.PATH || ''}`
+    };
+  }
+
   async promptToStartServer(): Promise<boolean> {
     const choice = await vscode.window.showInformationMessage(
       'Storial server is not running.',
       'Start Server',
+      'Install Storial',
       "I'll run it manually"
     );
 
     if (choice === 'Start Server') {
       return this.startServer();
+    } else if (choice === 'Install Storial') {
+      // Open terminal with install command
+      const terminal = vscode.window.createTerminal('Storial Install');
+      terminal.sendText('npm install -g storial');
+      terminal.show();
+      vscode.window.showInformationMessage(
+        'Installing Storial globally. Once complete, try "Start Server" again.'
+      );
     } else if (choice === "I'll run it manually") {
-      const storialPath = this.getStorialPath();
-      const command = `cd ${storialPath} && npm run dev`;
+      const command = 'npx storial';
       await vscode.env.clipboard.writeText(command);
       vscode.window.showInformationMessage(
-        `Command copied to clipboard. Run it in your terminal to start both the server and web UI.`
+        `Command copied to clipboard: "${command}". Run it in your terminal to start Storial.`
       );
     }
 
@@ -55,25 +110,38 @@ export class ServerManager {
   }
 
   async startServer(): Promise<boolean> {
-    const storialPath = this.getStorialPath();
-
-    this.outputChannel.appendLine(`Starting server from: ${storialPath}`);
+    this.outputChannel.appendLine('Looking for Storial installation...');
     this.outputChannel.show(true);
 
+    const storialCmd = this.findStorialCommand();
+
+    if (!storialCmd) {
+      this.outputChannel.appendLine('Storial not found!');
+      const install = await vscode.window.showErrorMessage(
+        'Storial is not installed. Would you like to install it?',
+        'Install globally',
+        'Cancel'
+      );
+
+      if (install === 'Install globally') {
+        const terminal = vscode.window.createTerminal('Storial Install');
+        terminal.sendText('npm install -g storial');
+        terminal.show();
+        vscode.window.showInformationMessage(
+          'Installing Storial. Once complete, try starting the server again.'
+        );
+      }
+      return false;
+    }
+
+    this.outputChannel.appendLine(`Starting: ${storialCmd.command} ${storialCmd.args.join(' ')}`);
+
     try {
-      // Use full path to npm since VSCode extension host doesn't inherit shell PATH
-      const npmPath = '/opt/homebrew/bin/npm';
+      const env = this.getEnvWithPath();
 
-      // Also need to set PATH so node can be found
-      const env = {
-        ...process.env,
-        PATH: `/opt/homebrew/bin:/usr/local/bin:${process.env.PATH || ''}`
-      };
-
-      // Use 'dev' instead of 'dev:server' to start both server (3050) and UI (5180)
-      this.serverProcess = spawn(npmPath, ['run', 'dev'], {
-        cwd: storialPath,
-        shell: false,
+      this.serverProcess = spawn(storialCmd.command, storialCmd.args, {
+        cwd: storialCmd.cwd || this.projectPath,
+        shell: true,
         env
       });
 
@@ -96,14 +164,16 @@ export class ServerManager {
       });
 
       // Wait for server to be ready
-      const ready = await this.waitForServer(15000);
+      const ready = await this.waitForServer(30000); // 30s for npx to download
 
       if (ready) {
         await this.apiClient.setProjectPath();
         vscode.window.showInformationMessage('Storial server started successfully!');
         return true;
       } else {
-        vscode.window.showErrorMessage('Server failed to start within timeout. Check the output channel for details.');
+        vscode.window.showErrorMessage(
+          'Server failed to start. Check Output > Storial Server for details.'
+        );
         return false;
       }
     } catch (error) {
@@ -123,12 +193,6 @@ export class ServerManager {
       await new Promise(r => setTimeout(r, 500));
     }
     return false;
-  }
-
-  private getStorialPath(): string {
-    // The extension is in vscode-extension/ subdirectory
-    // So the main storial directory is one level up
-    return path.resolve(this.extensionPath, '..');
   }
 
   stopServer(): void {

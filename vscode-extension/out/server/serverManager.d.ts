@@ -10,10 +10,14 @@ export declare class ServerManager {
     getApiClient(): ApiClient;
     isServerRunning(): Promise<boolean>;
     ensureServerRunning(): Promise<boolean>;
+    /**
+     * Find where storial is installed (global npm, npx, or local)
+     */
+    private findStorialCommand;
+    private getEnvWithPath;
     promptToStartServer(): Promise<boolean>;
     startServer(): Promise<boolean>;
     private waitForServer;
-    private getStorialPath;
     stopServer(): void;
     isServerProcessRunning(): boolean;
     showOutput(): void;

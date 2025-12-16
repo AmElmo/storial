@@ -3,6 +3,47 @@
   "version": "1.0.0",
   "description": "AI-powered component stories for React/Next.js - like Storybook, but magical",
   "type": "module",
+  "bin": {
+    "storial": "./bin/cli.js"
+  },
+  "main": "dist/server/index.js",
+  "files": [
+    "dist/",
+    "bin/",
+    "server/",
+    "src/",
+    "public/",
+    "vite.config.ts",
+    "tsconfig.json",
+    "tsconfig.server.json",
+    "tailwind.config.js",
+    "postcss.config.js",
+    "components.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AmElmo/storial.git"
+  },
+  "homepage": "https://github.com/AmElmo/storial#readme",
+  "bugs": {
+    "url": "https://github.com/AmElmo/storial/issues"
+  },
+  "keywords": [
+    "storybook",
+    "react",
+    "nextjs",
+    "next.js",
+    "components",
+    "stories",
+    "ai",
+    "testing",
+    "visual-testing",
+    "developer-tools"
+  ],
+  "author": "AmElmo",
+  "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:ui\"",
     "dev:server": "tsx watch server/index.ts",

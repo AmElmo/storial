@@ -1,0 +1,34 @@
+# Development files
+.git
+.gitignore
+.github
+.vscode
+.env
+.env.*
+!.env.example
+
+# VS Code extension (published separately)
+vscode-extension/
+
+# Test files
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+__tests__/
+test/
+tests/
+
+# Build artifacts we don't need
+*.map
+*.tsbuildinfo
+
+# Docs (README is included via files)
+CONTRIBUTING.md
+docs/
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+.storial/
