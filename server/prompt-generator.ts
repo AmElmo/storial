@@ -229,11 +229,16 @@ function generateComponentPrompt(
   storiesFileName: string,
   template: string
 ): string {
-  const propsSection = component.props.length > 0
+  const hasProps = component.props.length > 0;
+  const hasDataDependencies = component.dataDependencies.length > 0;
+  const hasServerActions = component.serverActions && component.serverActions.length > 0;
+  const hasDynamicInputs = hasProps || hasDataDependencies || hasServerActions;
+
+  const propsSection = hasProps
     ? component.props.map(p => `- \`${p.name}\`: ${p.type}${p.required ? ' (required)' : ''}${p.defaultValue ? ` = ${p.defaultValue}` : ''}`).join('\n')
     : 'No props detected';
 
-  const dataSection = component.dataDependencies.length > 0
+  const dataSection = hasDataDependencies
     ? component.dataDependencies.map(d => `- ${d.type}: \`${d.source}\` (line ${d.line})`).join('\n')
     : 'No API calls detected';
 
@@ -243,9 +248,47 @@ function generateComponentPrompt(
   ].join('\n') || 'Not used anywhere yet';
 
   // Server Actions section (if any detected)
-  const serverActionsSection = component.serverActions && component.serverActions.length > 0
-    ? component.serverActions.map(sa => `- \`${sa.functionName}\` from \`${sa.importPath}\``).join('\n')
+  const serverActionsSection = hasServerActions
+    ? component.serverActions!.map(sa => `- \`${sa.functionName}\` from \`${sa.importPath}\``).join('\n')
     : 'No server actions detected';
+
+  // Static component warning
+  const staticComponentSection = !hasDynamicInputs ? `
+## ⚠️ STATIC COMPONENT DETECTED
+
+**This component has NO dynamic inputs:**
+- No props
+- No API/data fetching
+- No server actions
+
+This means the component will render exactly the same way every time - you CANNOT create different visual states through stories.
+
+**IMPORTANT INSTRUCTIONS FOR STATIC COMPONENTS:**
+
+1. **Generate ONLY ONE story** - the "default" story showing the component as-is
+2. **Do NOT generate fake stories** like "loading", "error", "empty", etc. - these states don't exist for this component
+3. **Do NOT generate prop variations** - there are no props to vary
+4. **Leave mockApi and mockServerActions empty** - there's nothing to mock
+
+**Include a note in the story description** explaining that this component has hardcoded data and suggesting it could be refactored to accept props for better flexibility.
+
+Example for a static component:
+\`\`\`json
+{
+  "stories": [
+    {
+      "id": "default",
+      "name": "Default",
+      "description": "Static component with hardcoded data. To enable different states, consider refactoring to accept data as props.",
+      "props": {},
+      "mockApi": {},
+      "mockServerActions": {},
+      "mockContext": {}
+    }
+  ]
+}
+\`\`\`
+` : '';
 
   return `# Generate Stories for Component: ${component.name}
 
@@ -255,7 +298,7 @@ Create a stories file that enables previewing this component in different states
 The file should be created at: \`.explorer/stories/components/${storiesFileName}\`
 
 **Important:** Look at the template below for the expected JSON structure. Follow it exactly.
-
+${staticComponentSection}
 ---
 
 ## Component Analysis
@@ -263,6 +306,7 @@ The file should be created at: \`.explorer/stories/components/${storiesFileName}
 **Name:** ${component.name}
 **File:** ${relativePath}
 **Type:** ${component.isClientComponent ? 'Client Component' : 'Server Component'}
+**Has Dynamic Inputs:** ${hasDynamicInputs ? 'Yes' : 'No (static component)'}
 
 ### Props
 ${propsSection}
@@ -272,7 +316,7 @@ ${dataSection}
 
 ### Server Actions (Next.js Server Functions)
 ${serverActionsSection}
-${component.serverActions && component.serverActions.length > 0 ? `
+${hasServerActions ? `
 **Note:** This component uses Server Actions. You MUST include \`mockServerActions\` in each story to mock these function calls. See the template for the format.
 ` : ''}
 
@@ -303,7 +347,16 @@ ${template}
 ---
 
 ## Your Task
+${!hasDynamicInputs ? `
+**STATIC COMPONENT - LIMITED STORIES**
 
+Since this component has no props, no API calls, and no server actions, you should:
+1. Generate ONLY a single "default" story
+2. Note in the description that the component has hardcoded data
+3. Leave props, mockApi, mockServerActions, and mockContext empty
+
+Do NOT invent stories for states that cannot exist.
+` : `
 Based on the source code and analysis above:
 
 1. **Identify all possible states** the component can be in (loading, error, empty, populated, etc.)
@@ -317,7 +370,7 @@ Based on the source code and analysis above:
    - Empty state (if applicable)
    - Each significant prop variation
    - Edge cases (long text, missing optional data, etc.)
-
+`}
 **Create the file:** \`.explorer/stories/components/${storiesFileName}\`
 
 Generate the complete JSON file content now.`;
@@ -330,7 +383,11 @@ function generatePagePrompt(
   storiesFileName: string,
   template: string
 ): string {
-  const dataSection = page.dataDependencies.length > 0
+  const hasDataDependencies = page.dataDependencies.length > 0;
+  const hasRouteParams = (page.route.match(/\[([^\]]+)\]/g) || []).length > 0;
+  const hasDynamicInputs = hasDataDependencies || hasRouteParams;
+
+  const dataSection = hasDataDependencies
     ? page.dataDependencies.map(d => `- ${d.type}: \`${d.source}\` (line ${d.line})`).join('\n')
     : 'No API calls detected';
 
@@ -345,9 +402,45 @@ function generatePagePrompt(
   // Extract route params from the route (e.g., /users/[id] -> id)
   const routeParams = (page.route.match(/\[([^\]]+)\]/g) || [])
     .map(p => p.replace(/[\[\]]/g, ''));
-  const routeParamsSection = routeParams.length > 0
+  const routeParamsSection = hasRouteParams
     ? routeParams.map(p => `- \`${p}\`: string`).join('\n')
     : 'No route parameters';
+
+  // Static page warning
+  const staticPageSection = !hasDynamicInputs ? `
+## ⚠️ STATIC PAGE DETECTED
+
+**This page has NO dynamic inputs:**
+- No route parameters (like \`[id]\` or \`[slug]\`)
+- No API/data fetching
+
+This means the page will render exactly the same way every time - you CANNOT create different data states through stories.
+
+**IMPORTANT INSTRUCTIONS FOR STATIC PAGES:**
+
+1. **Generate ONLY ONE story** - the "default" story showing the page as-is
+2. **Do NOT generate fake stories** like "loading", "error", "empty", etc. - these states don't exist for this page
+3. **Leave mockApi empty** - there's nothing to mock
+
+**Include a note in the story description** explaining that this page has no dynamic data sources.
+
+Example for a static page:
+\`\`\`json
+{
+  "stories": [
+    {
+      "id": "default",
+      "name": "Default",
+      "description": "Static page with no dynamic data. The page renders the same way every time.",
+      "routeParams": {},
+      "queryParams": {},
+      "mockApi": {},
+      "mockServerActions": {}
+    }
+  ]
+}
+\`\`\`
+` : '';
 
   return `# Generate Stories for Page: ${page.route || '/'}
 
@@ -357,13 +450,14 @@ Create a stories file that enables previewing this page in different states with
 The file should be created at: \`.explorer/stories/pages/${storiesFileName}\`
 
 **Important:** Look at the template below for the expected JSON structure. Follow it exactly.
-
+${staticPageSection}
 ---
 
 ## Page Analysis
 
 **Route:** ${page.route || '/'}
 **File:** ${relativePath}
+**Has Dynamic Inputs:** ${hasDynamicInputs ? 'Yes' : 'No (static page)'}
 ${page.isLayout ? '**Type:** Layout' : ''}
 ${page.isLoading ? '**Type:** Loading UI' : ''}
 ${page.isError ? '**Type:** Error UI' : ''}
@@ -401,7 +495,16 @@ ${template}
 ---
 
 ## Your Task
+${!hasDynamicInputs ? `
+**STATIC PAGE - LIMITED STORIES**
 
+Since this page has no route parameters and no API calls, you should:
+1. Generate ONLY a single "default" story
+2. Note in the description that the page has no dynamic data
+3. Leave routeParams, queryParams, mockApi, and mockServerActions empty
+
+Do NOT invent stories for states that cannot exist.
+` : `
 Based on the source code and analysis above:
 
 1. **Identify all possible states** the page can be in (loading, error, empty, populated, etc.)
@@ -416,7 +519,7 @@ Based on the source code and analysis above:
    - Unauthenticated state (if auth is required)
    - Different user roles (if role-based content exists)
    - Edge cases
-
+`}
 **Create the file:** \`.explorer/stories/pages/${storiesFileName}\`
 
 Generate the complete JSON file content now.`;
