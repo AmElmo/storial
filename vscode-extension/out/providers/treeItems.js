@@ -39,7 +39,7 @@ class CategoryTreeItem extends vscode.TreeItem {
     category;
     itemCount;
     constructor(category, label, itemCount) {
-        super(label, vscode.TreeItemCollapsibleState.Expanded);
+        super(label, vscode.TreeItemCollapsibleState.Collapsed);
         this.category = category;
         this.itemCount = itemCount;
         this.contextValue = 'category';
@@ -242,7 +242,7 @@ class DetailSectionItem extends vscode.TreeItem {
     items;
     icon;
     constructor(label, items, icon) {
-        super(label, items.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
+        super(label, items.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         this.items = items;
         this.icon = icon;
         this.contextValue = 'detailSection';

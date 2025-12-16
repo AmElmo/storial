@@ -7,7 +7,7 @@ export class CategoryTreeItem extends vscode.TreeItem {
     label: string,
     public readonly itemCount: number
   ) {
-    super(label, vscode.TreeItemCollapsibleState.Expanded);
+    super(label, vscode.TreeItemCollapsibleState.Collapsed);
     this.contextValue = 'category';
     this.iconPath = new vscode.ThemeIcon(this.getIconForCategory(category));
     this.description = `${itemCount}`;
@@ -247,7 +247,7 @@ export class DetailSectionItem extends vscode.TreeItem {
     public readonly items: DetailItemData[],
     public readonly icon: string
   ) {
-    super(label, items.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
+    super(label, items.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.contextValue = 'detailSection';
     this.iconPath = new vscode.ThemeIcon(icon);
     this.description = `${items.length}`;

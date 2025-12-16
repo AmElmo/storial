@@ -154,7 +154,22 @@ class ExplorerTreeProvider {
         if (result.utilities?.length > 0) {
             categories.push(new treeItems_1.CategoryTreeItem('utilities', 'Utilities', result.utilities.length));
         }
+        // Health category - shows unused items
+        const unusedCount = this.getUnusedCount();
+        if (unusedCount > 0) {
+            categories.push(new treeItems_1.CategoryTreeItem('health', 'Health', unusedCount));
+        }
         return categories;
+    }
+    getUnusedCount() {
+        const result = this.scanResult;
+        if (!result)
+            return 0;
+        const unusedComponents = result.components.filter(c => c.usedInPages.length === 0 && c.usedInComponents.length === 0).length;
+        const unusedHooks = (result.hooks || []).filter(h => h.usedIn.length === 0).length;
+        const unusedContexts = (result.contexts || []).filter(c => c.usedIn.length === 0).length;
+        const unusedUtilities = (result.utilities || []).filter(u => u.usedIn.length === 0).length;
+        return unusedComponents + unusedHooks + unusedContexts + unusedUtilities;
     }
     getCategoryChildren(category) {
         const result = this.scanResult;
@@ -169,9 +184,40 @@ class ExplorerTreeProvider {
                 return (result.contexts || []).map(c => new treeItems_1.ContextTreeItem(c));
             case 'utilities':
                 return (result.utilities || []).map(u => new treeItems_1.UtilityTreeItem(u));
+            case 'health':
+                return this.getHealthChildren();
             default:
                 return [];
         }
+    }
+    getHealthChildren() {
+        const result = this.scanResult;
+        const items = [];
+        // Unused components
+        const unusedComponents = result.components.filter(c => c.usedInPages.length === 0 && c.usedInComponents.length === 0);
+        if (unusedComponents.length > 0) {
+            const children = unusedComponents.map(c => new treeItems_1.ComponentTreeItem(c));
+            items.push(new treeItems_1.FolderTreeItem(`Unused Components`, children));
+        }
+        // Unused hooks
+        const unusedHooks = (result.hooks || []).filter(h => h.usedIn.length === 0);
+        if (unusedHooks.length > 0) {
+            const children = unusedHooks.map(h => new treeItems_1.HookTreeItem(h));
+            items.push(new treeItems_1.FolderTreeItem(`Unused Hooks`, children));
+        }
+        // Unused contexts
+        const unusedContexts = (result.contexts || []).filter(c => c.usedIn.length === 0);
+        if (unusedContexts.length > 0) {
+            const children = unusedContexts.map(c => new treeItems_1.ContextTreeItem(c));
+            items.push(new treeItems_1.FolderTreeItem(`Unused Contexts`, children));
+        }
+        // Unused utilities
+        const unusedUtilities = (result.utilities || []).filter(u => u.usedIn.length === 0);
+        if (unusedUtilities.length > 0) {
+            const children = unusedUtilities.map(u => new treeItems_1.UtilityTreeItem(u));
+            items.push(new treeItems_1.FolderTreeItem(`Unused Utilities`, children));
+        }
+        return items;
     }
     // Helper to look up component file path by name
     getComponentFilePath(name) {
